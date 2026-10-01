@@ -537,6 +537,10 @@ namespace Forradia
                     void UpdateDerived() override;
 
                     void RenderBeforeGUIDerived() override;
+
+                    void OnKeyDownDerived(SDL_Keycode key) override;
+
+                    void OnMouseDownDerived(Uint8 button) override;
                 };
 
                 class MainMenuScene : public IScene

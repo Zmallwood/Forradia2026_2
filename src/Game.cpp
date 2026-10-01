@@ -1125,13 +1125,31 @@ namespace Forradia
 
     void Game::Engine::SceneManager::IntroScene::RenderBeforeGUIDerived()
     {
-        // std::cout << "IntroScene rendering" << std::endl;
+        auto &Now{Game::Engine::Common::TimeUtilities::Now};
 
         auto &imageRenderer{Game::Instance().engine_.rendering_.imageRenderer_};
+
+        auto &textRenderer{Game::Instance().engine_.rendering_.textRenderer_};
 
         imageRenderer.DrawImage("DefaultSceneBackground", 0.0f, 0.0f, 1.0f, 1.0f);
 
         imageRenderer.DrawImage("ForradiaLogo", 0.2f, 0.2f, 0.6f, 0.2f);
+
+        if (Now() % 800 < 400)
+        {
+            textRenderer.DrawString("Press to start", 0.5f, 0.5f,
+                                    Game::Engine::Rendering::TextRenderer::FontSizes::_24, true);
+        }
+    }
+
+    void Game::Engine::SceneManager::IntroScene::OnKeyDownDerived(SDL_Keycode key)
+    {
+        Game::Instance().engine_.sceneManager_.GoToScene("MainMenuScene");
+    }
+
+    void Game::Engine::SceneManager::IntroScene::OnMouseDownDerived(Uint8 button)
+    {
+        Game::Instance().engine_.sceneManager_.GoToScene("MainMenuScene");
     }
 
     void Game::Engine::SceneManager::MainMenuScene::RenderBeforeGUIDerived()
