@@ -460,7 +460,17 @@ namespace Forradia
                     class GUITextConsole : public GUIPanel
                     {
                       public:
-                        GUITextConsole();
+                        static std::shared_ptr<GUITextConsole> InstancePtr()
+                        {
+                            static std::shared_ptr<GUITextConsole> instancePtr{
+                                new GUITextConsole()};
+
+                            return instancePtr;
+                        }
+
+                        GUITextConsole(const GUITextConsole &) = delete;
+
+                        GUITextConsole &operator=(const GUITextConsole &) = delete;
 
                         void PrintLine(std::string_view line);
 
@@ -468,6 +478,8 @@ namespace Forradia
                         void RenderDerived() override;
 
                       private:
+                        GUITextConsole();
+
                         static constexpr float k_lineHeight_{0.02f};
 
                         std::vector<std::string> lines_;
@@ -546,6 +558,10 @@ namespace Forradia
                 class MainMenuScene : public IScene
                 {
                   protected:
+                    void InitializeDerived() override;
+
+                    void OnEnterDerived() override;
+
                     void RenderBeforeGUIDerived() override;
                 };
 

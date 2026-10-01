@@ -479,13 +479,22 @@ namespace Forradia
         auto &Hash = Game::Engine::Common::Hash;
 
         scenes_.insert({Hash(sceneName), scene});
+
+        scene->Initialize();
     }
 
     void Game::Engine::SceneManager::GoToScene(std::string_view sceneName)
     {
         auto &Hash = Game::Engine::Common::Hash;
 
-        currentScene_ = Hash(sceneName);
+        auto hash{Hash(sceneName)};
+
+        if (scenes_.contains(hash))
+        {
+            currentScene_ = hash;
+
+            scenes_.at(currentScene_)->OnEnter();
+        }
     }
 
     void Game::Engine::SceneManager::UpdateCurrentScene()
@@ -1152,8 +1161,22 @@ namespace Forradia
         Game::Instance().engine_.sceneManager_.GoToScene("MainMenuScene");
     }
 
+    void Game::Engine::SceneManager::MainMenuScene::InitializeDerived()
+    {
+        gui_->AddComponent(GUITextConsole::InstancePtr());
+    }
+
+    void Game::Engine::SceneManager::MainMenuScene::OnEnterDerived()
+    {
+        GUITextConsole::InstancePtr()->PrintLine("Starting game.");
+    }
+
     void Game::Engine::SceneManager::MainMenuScene::RenderBeforeGUIDerived()
     {
-        // std::cout << "MainMenuScene rendering" << std::endl;
+        auto &imageRenderer{Game::Instance().engine_.rendering_.imageRenderer_};
+
+        imageRenderer.DrawImage("DefaultSceneBackground", 0.0f, 0.0f, 1.0f, 1.0f);
+
+        imageRenderer.DrawImage("ForradiaLogo", 0.35f, 0.15f, 0.3f, 0.15f);
     }
 }
