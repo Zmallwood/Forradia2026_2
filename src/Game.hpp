@@ -205,7 +205,7 @@ namespace Forradia
             class SDLDevice
             {
               public:
-                SDLDevice();
+                void Initialize();
 
                 void ClearCanvas();
 
@@ -340,7 +340,7 @@ namespace Forradia
             class SceneManager
             {
               public:
-                SceneManager();
+                void Initialize();
 
                 void GoToScene(std::string_view sceneName);
 
@@ -584,7 +584,7 @@ namespace Forradia
 
                 class WorldGenerationScene : public IScene
                 {
-                  public:
+                  protected:
                     void OnEnterDerived() override;
 
                   private:
@@ -614,7 +614,24 @@ namespace Forradia
 
                 class MainScene : public IScene
                 {
-                  public:
+                  protected:
+                    void InitializeDerived() override;
+
+                    void OnEnterDerived() override;
+
+                    void UpdateDerived() override;
+
+                    void RenderBeforeGUIDerived() override;
+
+                    void RenderAfterGUIDerived() override;
+
+                    void OnKeyDownDerived(SDL_Keycode key) override;
+
+                    void OnKeyUpDerived(SDL_Keycode key) override;
+
+                    void OnMouseDownDerived(Uint8 button) override;
+
+                    void OnMouseUpDerived(Uint8 button, int clickSpeed) override;
                 };
 
                 void AddScene(std::string_view sceneName, std::shared_ptr<IScene> scene);

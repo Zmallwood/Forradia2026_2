@@ -47,16 +47,16 @@ namespace Forradia
 
     void Game::Start()
     {
-        std::cout << "Game started" << std::endl;
-
         engine_.Run();
     }
 
     void Game::Engine::Run()
     {
-        std::cout << "Engine running" << std::endl;
-
         srand(time(nullptr));
+
+        sdlDevice_.Initialize();
+
+        sceneManager_.Initialize();
 
         imageBank_.LoadImages();
 
@@ -256,7 +256,7 @@ namespace Forradia
         }
     }
 
-    Game::Engine::SDLDevice::SDLDevice()
+    void Game::Engine::SDLDevice::Initialize()
     {
         using SDLDeleter = Game::Engine::Common::SDLDeleter;
 
@@ -481,7 +481,7 @@ namespace Forradia
                                 mousePosition.y - cursorHeight / 2, cursorWidth, cursorHeight);
     }
 
-    Game::Engine::SceneManager::SceneManager()
+    void Game::Engine::SceneManager::Initialize()
     {
         AddScene("IntroScene", std::make_shared<IntroScene>());
         AddScene("MainMenuScene", std::make_shared<MainMenuScene>());
@@ -1850,5 +1850,102 @@ namespace Forradia
 
             worldArea->creaturesMirror_.insert({newCreature, {x, y}});
         }
+    }
+
+    void Game::Engine::SceneManager::MainScene::InitializeDerived()
+    {
+        auto &ConvertWidthToHeight = Game::Engine::Common::CanvasUtilities::ConvertWidthToHeight;
+
+        gui_->AddComponent(Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr());
+
+        // gui_->AddComponent(GetSingletonPtr<GUIExperienceMeter>());
+
+        gui_->AddComponent(std::make_shared<Game::Engine::SceneManager::IScene::GUIButton>(
+            "", 0.94f, 0.08f, 0.05f, ConvertWidthToHeight(0.05f),
+            [this]()
+            {
+                // _<GUIInventoryWindow>().ToggleVisibility();
+            },
+            "GUIButtonInventoryBackground", "GUIButtonInventoryHoveredBackground"));
+
+        gui_->AddComponent(std::make_shared<Game::Engine::SceneManager::IScene::GUIButton>(
+            "", 0.94f, 0.18f, 0.05f, ConvertWidthToHeight(0.05f), [this]() {},
+            "GUIButtonEquipmentBackground", "GUIButtonEquipmentHoveredBackground"));
+
+        // gui_->AddComponent(std::make_shared<GUIStatusPanel>());
+
+        // gui_->AddComponent(GetSingletonPtr<GUIInventoryWindow>());
+    }
+
+    void Game::Engine::SceneManager::MainScene::OnEnterDerived()
+    {
+        auto guiTextConsole = Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr();
+
+        guiTextConsole->SetYPosition(1.0f - guiTextConsole->size_.height
+                                     // -_<GUIExperienceMeter>().size_.height
+        );
+
+        guiTextConsole->PrintLine("You have entered the world.");
+    }
+
+    void Game::Engine::SceneManager::MainScene::UpdateDerived()
+    {
+        // _<CreaturesMovement>().Update();
+
+        // _<KeyboardMovement>().Update();
+
+        // _<MouseMovement>().Update();
+
+        // _<TileHovering>().Update();
+
+        // _<FirstPersonHovering>().Update();
+
+        // _<CreatureRespawner>().Update();
+
+        // _<CreaturesCombatToPlayer>().Update();
+    }
+
+    void Game::Engine::SceneManager::MainScene::RenderBeforeGUIDerived()
+    {
+        // _<WorldView>().Render();
+
+        // _<FirstPersonView>().Render();
+
+        // _<FirstPersonHovering>().Render();
+    }
+
+    void Game::Engine::SceneManager::MainScene::RenderAfterGUIDerived()
+    {
+        // _<ObjectMoving>().Render();
+    }
+
+    void Game::Engine::SceneManager::MainScene::OnKeyDownDerived(SDL_Keycode key)
+    {
+        // _<KeyboardMovement>().OnKeyDown(key);
+
+        // _<MouseMovement>().OnKeyDown(key);
+
+        // _<KeyboardHotkeys>().OnKeyDown(key);
+    }
+
+    void Game::Engine::SceneManager::MainScene::OnKeyUpDerived(SDL_Keycode key)
+    {
+        // _<KeyboardMovement>().OnKeyUp(key);
+
+        // _<MouseMovement>().OnKeyUp(key);
+    }
+
+    void Game::Engine::SceneManager::MainScene::OnMouseDownDerived(Uint8 button)
+    {
+        // _<PlayerCombatToOthers>().OnMouseDown(button);
+
+        // _<MouseMovement>().OnMouseDown(button);
+
+        // _<ObjectMoving>().OnMouseDown(button);
+    }
+
+    void Game::Engine::SceneManager::MainScene::OnMouseUpDerived(Uint8 button, int clickSpeed)
+    {
+        //_<ObjectMoving>().OnMouseUp(button, clickSpeed);
     }
 }
