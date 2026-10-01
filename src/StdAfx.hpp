@@ -14,6 +14,8 @@
 #include <string_view>
 #include <unordered_map>
 #include <functional>
+#include <vector>
+#include <map>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>

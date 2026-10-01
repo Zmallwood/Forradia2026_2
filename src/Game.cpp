@@ -9,6 +9,12 @@
 
 namespace Forradia
 {
+    Game::Engine::Common::Matter::Geometry::Point
+    Game::Engine::Common::Matter::Geometry::Point::operator+(const Point &other) const
+    {
+        return {x + other.x, y + other.y};
+    }
+
     void Game::Engine::Common::Matter::Geometry::PointF::operator+=(const PointF &other)
     {
         x += other.x;
@@ -183,6 +189,11 @@ namespace Forradia
 
         return {static_cast<float>(x) / canvasSize.width,
                 static_cast<float>(y) / canvasSize.height};
+    }
+
+    int Game::Engine::Common::NumberUtilities::InvertSpeed(float speed)
+    {
+        return static_cast<int>(Game::Engine::Common::Constants::k_oneSecondMillis / speed);
     }
 
     void Game::Engine::PollEvents()
@@ -1132,6 +1143,143 @@ namespace Forradia
         }
 
         SDL_RenderCopy(sldDevice.renderer_.get(), texture.get(), nullptr, &rect);
+    }
+
+    Game::Engine::World::World() : currentWorldArea_(std::make_shared<WorldArea>())
+    {
+    }
+
+    Game::Engine::World::WorldArea::WorldArea()
+    {
+        auto worldAreaSize{Game::Engine::Configuration::GameProperties::k_worldAreaSize_};
+
+        for (auto x = 0; x < worldAreaSize.width; x++)
+        {
+            tiles_.push_back(std::vector<std::shared_ptr<Tile>>());
+
+            for (auto y = 0; y < worldAreaSize.height; y++)
+            {
+                tiles_.at(x).push_back(std::make_shared<Tile>());
+            }
+        }
+    }
+
+    Game::Engine::World::WorldArea::Tile::Tile() : tileObjects_(std::make_shared<TileObjects>())
+    {
+    }
+
+    void Game::Engine::World::WorldArea::Tile::TileObjects::Clear()
+    {
+        objects_.clear();
+    }
+
+    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(
+        int objectType, Common::Matter::Geometry::Point position)
+    {
+        auto &gameProperties = Game::Instance().engine_.configuration_.gameProperties_;
+
+        if (position.x == -1 || position.y == -1)
+        {
+            position.x = rand() % gameProperties.k_tileUnitsWidth_;
+            position.y = rand() % gameProperties.k_tileUnitsWidth_;
+        }
+
+        objects_.insert({position, std::make_shared<Object>(objectType)});
+    }
+
+    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(
+        std::string_view objectName, Common::Matter::Geometry::Point position)
+    {
+        AddObject(Game::Engine::Common::Hash(objectName), position);
+    }
+
+    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(
+        std::shared_ptr<Object> object, Common::Matter::Geometry::Point position)
+    {
+        objects_.insert({position, object});
+    }
+
+    int Game::Engine::World::WorldArea::Tile::TileObjects::Count()
+    {
+        return objects_.size();
+    }
+
+    std::shared_ptr<Game::Engine::World::WorldArea::Tile::TileObjects::Object>
+    Game::Engine::World::WorldArea::Tile::TileObjects::PickObject(
+        std::shared_ptr<Game::Engine::World::WorldArea::Tile::TileObjects::Object> object)
+    {
+        for (auto it = objects_.begin(); it != objects_.end(); ++it)
+        {
+            if (it->second == object)
+            {
+                objects_.erase(it);
+
+                return object;
+            }
+        }
+
+        return nullptr;
+    }
+
+    Game::Engine::World::WorldArea::Tile::TileObjects::Object::Object(int type) : type_(type)
+    {
+    }
+
+    Game::Engine::World::WorldArea::Tile::TileObjects::Object::Object(std::string_view typeName)
+        : type_(Game::Engine::Common::Hash(typeName))
+    {
+    }
+
+    Game::Engine::World::WorldArea::Tile::Creature::Creature(std::string_view typeName)
+    {
+        type_ = Game::Engine::Common::Hash(typeName);
+
+        corpesType_ = Game::Engine::Common::Hash("Object" + std::string(typeName) + "Corpse");
+    }
+
+    Game::Engine::World::WorldArea::Tile::Creature::Creature(int type)
+    {
+        type_ = type;
+
+        // auto typeName{_<CreatureIndex>().GetCreatureLabel(type)};
+
+        // corpesType_ = Hash("Object" + std::string(typeName) + "Corpse");
+    }
+
+    void Game::Engine::World::WorldArea::Tile::Creature::Hit(
+        float damage, Common::Matter::Geometry::PointF hitPosition)
+    {
+        auto &Now{Game::Engine::Common::TimeUtilities::Now};
+
+        auto &InvertSpeed{Game::Engine::Common::NumberUtilities::InvertSpeed};
+
+        health_ -= damage;
+
+        ticksLastHitOnSelf_ = Now();
+
+        lastHitPosition_ = hitPosition;
+
+        targetingPlayer_ = true;
+
+        auto now{Now()};
+
+        if (now - ticksLastHitOnOther_ > InvertSpeed(attackSpeed_))
+        {
+            ticksLastHitOnOther_ = now;
+        }
+
+        // auto creatureLabel = _<CreatureIndex>().GetCreatureLabel(type_);
+
+        // std::stringstream ssDamage;
+        // ssDamage << std::fixed << std::setprecision(1) << damage;
+
+        // _<GUITextConsole>().PrintLine("You hit a " + creatureLabel + " for " + ssDamage.str() +
+        //                               " damage.");
+    }
+
+    bool Game::Engine::World::WorldArea::Tile::Creature::IsDead()
+    {
+        return health_ <= 0.0f;
     }
 
     void Game::Engine::SceneManager::IntroScene::RenderBeforeGUIDerived()
