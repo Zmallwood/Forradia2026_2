@@ -33,6 +33,8 @@ namespace Forradia
           public:
             void Run();
 
+            void Stop();
+
           private:
             class Common
             {
@@ -546,8 +548,6 @@ namespace Forradia
                 class IntroScene : public IScene
                 {
                   protected:
-                    void UpdateDerived() override;
-
                     void RenderBeforeGUIDerived() override;
 
                     void OnKeyDownDerived(SDL_Keycode key) override;
@@ -563,6 +563,24 @@ namespace Forradia
                     void OnEnterDerived() override;
 
                     void RenderBeforeGUIDerived() override;
+                };
+
+                class WorldGenerationScene : public IScene
+                {
+                  public:
+                    void OnEnterDerived() override;
+
+                  private:
+                    class WorldGenerator
+                    {
+                      public:
+                        void GenerateNewWorld();
+                    } worldGenerator_;
+                };
+
+                class MainScene : public IScene
+                {
+                  public:
                 };
 
                 void AddScene(std::string_view sceneName, std::shared_ptr<IScene> scene);

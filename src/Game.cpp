@@ -78,6 +78,11 @@ namespace Forradia
         }
     }
 
+    void Game::Engine::Stop()
+    {
+        running_ = false;
+    }
+
     void Game::Engine::Common::SDLDeleter::operator()(SDL_Window *window)
     {
         SDL_DestroyWindow(window);
@@ -469,6 +474,8 @@ namespace Forradia
     {
         AddScene("IntroScene", std::make_shared<IntroScene>());
         AddScene("MainMenuScene", std::make_shared<MainMenuScene>());
+        AddScene("WorldGenerationScene", std::make_shared<WorldGenerationScene>());
+        AddScene("MainScene", std::make_shared<MainScene>());
 
         GoToScene("IntroScene");
     }
@@ -1127,11 +1134,6 @@ namespace Forradia
         SDL_RenderCopy(sldDevice.renderer_.get(), texture.get(), nullptr, &rect);
     }
 
-    void Game::Engine::SceneManager::IntroScene::UpdateDerived()
-    {
-        // Game::Instance().engine_.sceneManager_.GoToScene("MainMenuScene");
-    }
-
     void Game::Engine::SceneManager::IntroScene::RenderBeforeGUIDerived()
     {
         auto &Now{Game::Engine::Common::TimeUtilities::Now};
@@ -1164,6 +1166,15 @@ namespace Forradia
     void Game::Engine::SceneManager::MainMenuScene::InitializeDerived()
     {
         gui_->AddComponent(GUITextConsole::InstancePtr());
+
+        gui_->AddComponent(std::make_shared<GUIPanel>(0.4f, 0.4f, 0.2f, 0.2f));
+
+        gui_->AddComponent(std::make_shared<GUIButton>(
+            "Play", 0.45f, 0.44f, 0.1f, 0.04f, [this]()
+            { Game::Instance().engine_.sceneManager_.GoToScene("WorldGenerationScene"); }));
+
+        gui_->AddComponent(std::make_shared<GUIButton>("Quit ", 0.45f, 0.52f, 0.1f, 0.04f, [this]()
+                                                       { Game::Instance().engine_.Stop(); }));
     }
 
     void Game::Engine::SceneManager::MainMenuScene::OnEnterDerived()
@@ -1178,5 +1189,16 @@ namespace Forradia
         imageRenderer.DrawImage("DefaultSceneBackground", 0.0f, 0.0f, 1.0f, 1.0f);
 
         imageRenderer.DrawImage("ForradiaLogo", 0.35f, 0.15f, 0.3f, 0.15f);
+    }
+
+    void Game::Engine::SceneManager::WorldGenerationScene::OnEnterDerived()
+    {
+        worldGenerator_.GenerateNewWorld();
+
+        Game::Instance().engine_.sceneManager_.GoToScene("MainScene");
+    }
+
+    void Game::Engine::SceneManager::WorldGenerationScene::WorldGenerator::GenerateNewWorld()
+    {
     }
 }
