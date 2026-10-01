@@ -211,6 +211,10 @@ namespace Forradia
 
                 void PresentCanvas();
 
+                void Clip(float x, float y, float width, float height);
+
+                void ResetClip();
+
                 std::shared_ptr<SDL_Window> window_;
                 std::shared_ptr<SDL_Renderer> renderer_;
 
@@ -337,26 +341,188 @@ namespace Forradia
                 } cursor_;
             } minorComponents_;
 
+            class Configuration
+            {
+              public:
+                class GameProperties
+                {
+                  public:
+                    static constexpr Common::Matter::Geometry::Size k_worldAreaSize_{100, 100};
+                    static constexpr float k_tileWidth_{0.05f};
+                    static constexpr int k_tileUnitsWidth_{20};
+                    static constexpr float k_viewWidth_{0.5f};
+                    static constexpr float k_largeObjectScale_{0.22f};
+                    static constexpr float k_smallObjectScale_{0.08f};
+                    static constexpr Common::Matter::Geometry::PointF k_firstPersonViewMargin_{
+                        0.03f, 0.01f};
+                } gameProperties_;
+            } configuration_;
+
+            class World
+            {
+              public:
+                enum class WorldDirections
+                {
+                    North,
+                    East,
+                    South,
+                    West,
+                };
+
+                class WorldArea
+                {
+                  public:
+                    class Tile
+                    {
+                      public:
+                        class TileObjects
+                        {
+                          public:
+                            class Object
+                            {
+                              public:
+                                Object(int type);
+
+                                Object(std::string_view typeName);
+
+                                int type_{0};
+                            };
+
+                            void Clear();
+
+                            void AddObject(int objectType,
+                                           Common::Matter::Geometry::Point position = {-1, -1});
+
+                            void AddObject(std::string_view objectName,
+                                           Common::Matter::Geometry::Point position = {-1, -1});
+
+                            void AddObject(std::shared_ptr<Object> object,
+                                           Common::Matter::Geometry::Point position = {-1, -1});
+
+                            int Count();
+
+                            std::shared_ptr<Object> PickObject(std::shared_ptr<Object> object);
+
+                            std::map<Common::Matter::Geometry::Point, std::shared_ptr<Object>>
+                                objects_;
+                        };
+
+                        class Creature
+                        {
+                          public:
+                            Creature(std::string_view typeName);
+
+                            Creature(int type);
+
+                            void Hit(float damage, Common::Matter::Geometry::PointF hitPosition);
+
+                            bool IsDead();
+
+                            int type_{0};
+                            int corpesType_{0};
+                            int ticksLastMovement_{0};
+                            float movementSpeed_{1.0f};
+                            int ticksLastHitOnSelf_{0};
+                            Common::Matter::Geometry::PointF lastHitPosition_{-1.0f, -1.0f};
+                            int experienceValue_{13};
+                            int respawnTimeMillis_{5000};
+                            int ticksLastHitOnOther_{0};
+                            float attackSpeed_{0.5f};
+                            bool targetingPlayer_{false};
+
+                          private:
+                            float health_{5.0f};
+                            float maxHealth_{5.0f};
+                        };
+
+                        Tile();
+
+                        int ground_{0};
+                        int elevation_{0};
+                        std::shared_ptr<TileObjects> tileObjects_;
+                        std::shared_ptr<Creature> creature_;
+                    };
+
+                    WorldArea();
+
+                    Common::Matter::Geometry::Size GetSize();
+
+                    bool IsValidCoordinate(int x, int y);
+
+                    bool IsValidCoordinate(Common::Matter::Geometry::Point coordinate);
+
+                    std::shared_ptr<Tile> GetTile(int x, int y);
+
+                    std::shared_ptr<Tile> GetTile(Common::Matter::Geometry::Point coordinate);
+
+                    std::unordered_map<std::shared_ptr<Tile::Creature>,
+                                       Common::Matter::Geometry::Point>
+                        creaturesMirror_;
+
+                  private:
+                    std::vector<std::vector<std::shared_ptr<Tile>>> tiles_;
+                };
+
+                World();
+
+                std::shared_ptr<WorldArea> currentWorldArea_;
+            } world_;
+
+            class CoreGameObjects
+            {
+              public:
+                class Player
+                {
+                  public:
+                    class PlayerInventory
+                    {
+                      public:
+                    } playerInventory_;
+
+                    void Initialize();
+
+                    void MoveNorth();
+
+                    void MoveEast();
+
+                    void MoveSouth();
+
+                    void MoveWest();
+
+                    void TurnNorth();
+
+                    void TurnEast();
+
+                    void TurnSouth();
+
+                    void TurnWest();
+
+                    void AddExperience(int amount);
+
+                    void Hit(float damage);
+
+                    Common::Matter::Geometry::Point position_{0, 0};
+                    int ticksLastMovement_{0};
+                    float movementSpeed_{4.0f};
+                    Common::Matter::Geometry::Point destination_{-1, -1};
+                    Common::Matter::Geometry::Point facedTileCoordinate_{-1, -1};
+                    World::WorldDirections facingDirection_{World::WorldDirections::South};
+                    int ticksLastHitOnOther_{0};
+                    float attackSpeed_{2.0f};
+                    std::string name_{"Unnamed player"};
+                    int experience_{0};
+                    float health_{10.0f};
+                    float maxHealth_{10.0f};
+                    int ticksLastHitOnSelf_{0};
+
+                  private:
+                    void SpawnOnSuitableLocation();
+                } player_;
+            } coreGameObjects_;
+
             class SceneManager
             {
               public:
-                void Initialize();
-
-                void GoToScene(std::string_view sceneName);
-
-                void UpdateCurrentScene();
-
-                void RenderCurrentScene();
-
-                void OnKeyDownCurrentScene(SDL_Keycode key);
-
-                void OnKeyUpCurrentScene(SDL_Keycode key);
-
-                void OnMouseDownCurrentScene(Uint8 button);
-
-                void OnMouseUpCurrentScene(Uint8 button, int clickSpeed);
-
-              private:
                 class IScene
                 {
                   public:
@@ -562,6 +728,23 @@ namespace Forradia
                     std::shared_ptr<GUI> gui_;
                 };
 
+                void Initialize();
+
+                void GoToScene(std::string_view sceneName);
+
+                void UpdateCurrentScene();
+
+                void RenderCurrentScene();
+
+                void OnKeyDownCurrentScene(SDL_Keycode key);
+
+                void OnKeyUpCurrentScene(SDL_Keycode key);
+
+                void OnMouseDownCurrentScene(Uint8 button);
+
+                void OnMouseUpCurrentScene(Uint8 button, int clickSpeed);
+
+              private:
                 class IntroScene : public IScene
                 {
                   protected:
@@ -632,6 +815,13 @@ namespace Forradia
                     void OnMouseDownDerived(Uint8 button) override;
 
                     void OnMouseUpDerived(Uint8 button, int clickSpeed) override;
+
+                  private:
+                    class WorldView
+                    {
+                      public:
+                        void Render();
+                    } worldView_;
                 };
 
                 void AddScene(std::string_view sceneName, std::shared_ptr<IScene> scene);
@@ -639,125 +829,6 @@ namespace Forradia
                 int currentScene_{0};
                 std::unordered_map<int, std::shared_ptr<IScene>> scenes_;
             } sceneManager_;
-
-            class Configuration
-            {
-              public:
-                class GameProperties
-                {
-                  public:
-                    static constexpr Common::Matter::Geometry::Size k_worldAreaSize_{100, 100};
-                    static constexpr float k_tileWidth_{0.05f};
-                    static constexpr int k_tileUnitsWidth_{20};
-                    static constexpr float k_viewWidth_{0.5f};
-                    static constexpr float k_largeObjectScale_{0.22f};
-                    static constexpr float k_smallObjectScale_{0.08f};
-                    static constexpr Common::Matter::Geometry::PointF k_firstPersonViewMargin_{
-                        0.03f, 0.01f};
-                } gameProperties_;
-            } configuration_;
-
-            class World
-            {
-              public:
-                class WorldArea
-                {
-                  public:
-                    class Tile
-                    {
-                      public:
-                        class TileObjects
-                        {
-                          public:
-                            class Object
-                            {
-                              public:
-                                Object(int type);
-
-                                Object(std::string_view typeName);
-
-                                int type_{0};
-                            };
-
-                            void Clear();
-
-                            void AddObject(int objectType,
-                                           Common::Matter::Geometry::Point position = {-1, -1});
-
-                            void AddObject(std::string_view objectName,
-                                           Common::Matter::Geometry::Point position = {-1, -1});
-
-                            void AddObject(std::shared_ptr<Object> object,
-                                           Common::Matter::Geometry::Point position = {-1, -1});
-
-                            int Count();
-
-                            std::shared_ptr<Object> PickObject(std::shared_ptr<Object> object);
-
-                            std::map<Common::Matter::Geometry::Point, std::shared_ptr<Object>>
-                                objects_;
-                        };
-
-                        class Creature
-                        {
-                          public:
-                            Creature(std::string_view typeName);
-
-                            Creature(int type);
-
-                            void Hit(float damage, Common::Matter::Geometry::PointF hitPosition);
-
-                            bool IsDead();
-
-                            int type_{0};
-                            int corpesType_{0};
-                            int ticksLastMovement_{0};
-                            float movementSpeed_{1.0f};
-                            int ticksLastHitOnSelf_{0};
-                            Common::Matter::Geometry::PointF lastHitPosition_{-1.0f, -1.0f};
-                            int experienceValue_{13};
-                            int respawnTimeMillis_{5000};
-                            int ticksLastHitOnOther_{0};
-                            float attackSpeed_{0.5f};
-                            bool targetingPlayer_{false};
-
-                          private:
-                            float health_{5.0f};
-                            float maxHealth_{5.0f};
-                        };
-
-                        Tile();
-
-                        int ground_{0};
-                        int elevation_{0};
-                        std::shared_ptr<TileObjects> tileObjects_;
-                        std::shared_ptr<Creature> creature_;
-                    };
-
-                    WorldArea();
-
-                    Common::Matter::Geometry::Size GetSize();
-
-                    bool IsValidCoordinate(int x, int y);
-
-                    bool IsValidCoordinate(Common::Matter::Geometry::Point coordinate);
-
-                    std::shared_ptr<Tile> GetTile(int x, int y);
-
-                    std::shared_ptr<Tile> GetTile(Common::Matter::Geometry::Point coordinate);
-
-                    std::unordered_map<std::shared_ptr<Tile::Creature>,
-                                       Common::Matter::Geometry::Point>
-                        creaturesMirror_;
-
-                  private:
-                    std::vector<std::vector<std::shared_ptr<Tile>>> tiles_;
-                };
-
-                World();
-
-                std::shared_ptr<WorldArea> currentWorldArea_;
-            } world_;
 
             void PollEvents();
 

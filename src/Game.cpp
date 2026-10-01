@@ -282,6 +282,27 @@ namespace Forradia
         SDL_RenderPresent(renderer_.get());
     }
 
+    void Game::Engine::SDLDevice::Clip(float x, float y, float width, float height)
+    {
+        auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
+
+        SDL_Rect clipRect;
+
+        auto canvasSize{GetCanvasSize()};
+
+        clipRect.x = static_cast<int>(x * canvasSize.width);
+        clipRect.y = static_cast<int>(y * canvasSize.height);
+        clipRect.w = static_cast<int>(width * canvasSize.width);
+        clipRect.h = static_cast<int>(height * canvasSize.height);
+
+        SDL_RenderSetClipRect(renderer_.get(), &clipRect);
+    }
+
+    void Game::Engine::SDLDevice::ResetClip()
+    {
+        SDL_RenderSetClipRect(renderer_.get(), nullptr);
+    }
+
     void Game::Engine::ImageBank::LoadImages()
     {
         auto &Replace = Game::Engine::Common::StringUtilities::Replace;
@@ -1325,6 +1346,183 @@ namespace Forradia
         return health_ <= 0.0f;
     }
 
+    void Game::Engine::CoreGameObjects::Player::Initialize()
+    {
+        SpawnOnSuitableLocation();
+
+        // playerInventory_->AddObject("ObjectRedApple");
+
+        // playerInventory_->AddObject("ObjectCopperSword");
+    }
+
+    void Game::Engine::CoreGameObjects::Player::SpawnOnSuitableLocation()
+    {
+        auto &world = Game::Instance().engine_.world_;
+
+        auto &Hash = Game::Engine::Common::Hash;
+
+        auto worldArea{world.currentWorldArea_};
+
+        auto worldAreaSize{worldArea->GetSize()};
+
+        position_ = {worldAreaSize.width / 2, worldAreaSize.height / 2};
+
+        auto tile{worldArea->GetTile(position_)};
+
+        while (tile->ground_ == Hash("GroundWater"))
+        {
+            position_ = {rand() % worldAreaSize.width, rand() % worldAreaSize.height};
+            tile = worldArea->GetTile(position_);
+        }
+
+        facedTileCoordinate_ = {position_.x, position_.y + 1};
+    }
+
+    void Game::Engine::CoreGameObjects::Player::MoveNorth()
+    {
+        auto &world = Game::Instance().engine_.world_;
+
+        auto &Hash = Game::Engine::Common::Hash;
+
+        auto newX{position_.x};
+        auto newY{position_.y - 1};
+
+        auto newTile{world.currentWorldArea_->GetTile({newX, newY})};
+
+        if (newTile && (newTile->ground_ == Hash("GroundWater") || newTile->creature_))
+        {
+            return;
+        }
+
+        position_ = {newX, newY};
+
+        facedTileCoordinate_ = {position_.x, position_.y - 1};
+
+        facingDirection_ = World::WorldDirections::North;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::MoveEast()
+    {
+        auto &world = Game::Instance().engine_.world_;
+
+        auto &Hash = Game::Engine::Common::Hash;
+
+        auto newX{position_.x + 1};
+        auto newY{position_.y};
+
+        auto newTile{world.currentWorldArea_->GetTile({newX, newY})};
+
+        if (newTile && (newTile->ground_ == Hash("GroundWater") || newTile->creature_))
+        {
+            return;
+        }
+
+        position_ = {newX, newY};
+
+        facedTileCoordinate_ = {position_.x + 1, position_.y};
+
+        facingDirection_ = World::WorldDirections::East;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::MoveSouth()
+    {
+        auto &world = Game::Instance().engine_.world_;
+
+        auto &Hash = Game::Engine::Common::Hash;
+
+        auto newX{position_.x};
+        auto newY{position_.y + 1};
+
+        auto newTile{world.currentWorldArea_->GetTile({newX, newY})};
+
+        if (newTile && (newTile->ground_ == Hash("GroundWater") || newTile->creature_))
+        {
+            return;
+        }
+
+        position_ = {newX, newY};
+
+        facedTileCoordinate_ = {position_.x, position_.y + 1};
+
+        facingDirection_ = World::WorldDirections::South;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::MoveWest()
+    {
+        auto &world = Game::Instance().engine_.world_;
+
+        auto &Hash = Game::Engine::Common::Hash;
+
+        auto newX{position_.x - 1};
+        auto newY{position_.y};
+
+        auto newTile{world.currentWorldArea_->GetTile({newX, newY})};
+
+        if (newTile && (newTile->ground_ == Hash("GroundWater") || newTile->creature_))
+        {
+            return;
+        }
+
+        position_ = {newX, newY};
+
+        facedTileCoordinate_ = {position_.x - 1, position_.y};
+
+        facingDirection_ = World::WorldDirections::West;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::TurnNorth()
+    {
+        facedTileCoordinate_ = {position_.x, position_.y - 1};
+
+        facingDirection_ = World::WorldDirections::North;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::TurnEast()
+    {
+        facedTileCoordinate_ = {position_.x + 1, position_.y};
+
+        facingDirection_ = World::WorldDirections::East;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::TurnSouth()
+    {
+        facedTileCoordinate_ = {position_.x, position_.y + 1};
+
+        facingDirection_ = World::WorldDirections::South;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::TurnWest()
+    {
+        facedTileCoordinate_ = {position_.x - 1, position_.y};
+
+        facingDirection_ = World::WorldDirections::West;
+    }
+
+    void Game::Engine::CoreGameObjects::Player::AddExperience(int amount)
+    {
+        experience_ += amount;
+
+        auto guiTextConsole{Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr()};
+
+        guiTextConsole->PrintLine("You gained " + std::to_string(amount) + " experience points.");
+    }
+
+    void Game::Engine::CoreGameObjects::Player::Hit(float damage)
+    {
+        auto &Now{Game::Engine::Common::TimeUtilities::Now};
+
+        auto guiTextConsole{Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr()};
+
+        health_ -= damage;
+
+        ticksLastHitOnSelf_ = Now();
+
+        std::stringstream ssDamage;
+        ssDamage << std::fixed << std::setprecision(1) << damage;
+
+        guiTextConsole->PrintLine("You took " + ssDamage.str() + " damage.");
+    }
+
     void Game::Engine::SceneManager::IntroScene::RenderBeforeGUIDerived()
     {
         auto &Now{Game::Engine::Common::TimeUtilities::Now};
@@ -1879,7 +2077,11 @@ namespace Forradia
 
     void Game::Engine::SceneManager::MainScene::OnEnterDerived()
     {
-        auto guiTextConsole = Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr();
+        auto guiTextConsole{Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr()};
+
+        auto& player = Game::Instance().engine_.coreGameObjects_.player_;
+
+        player.Initialize();
 
         guiTextConsole->SetYPosition(1.0f - guiTextConsole->size_.height
                                      // -_<GUIExperienceMeter>().size_.height
@@ -1907,7 +2109,7 @@ namespace Forradia
 
     void Game::Engine::SceneManager::MainScene::RenderBeforeGUIDerived()
     {
-        // _<WorldView>().Render();
+        worldView_.Render();
 
         // _<FirstPersonView>().Render();
 
@@ -1947,5 +2149,9 @@ namespace Forradia
     void Game::Engine::SceneManager::MainScene::OnMouseUpDerived(Uint8 button, int clickSpeed)
     {
         //_<ObjectMoving>().OnMouseUp(button, clickSpeed);
+    }
+
+    void Game::Engine::SceneManager::MainScene::WorldView::Render()
+    {
     }
 }
