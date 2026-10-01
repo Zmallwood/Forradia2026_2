@@ -68,6 +68,24 @@ namespace Forradia
                             float x{0.0f};
                             float y{0.0f};
                         };
+
+                        class SizeF
+                        {
+                          public:
+                            float width{0.0f};
+                            float height{0.0f};
+                        };
+
+                        class RectF
+                        {
+                          public:
+                            bool Contains(PointF point);
+
+                            float x{0.0f};
+                            float y{0.0f};
+                            float width{0.0f};
+                            float height{0.0f};
+                        };
                     };
 
                     class Coloring
@@ -218,6 +236,25 @@ namespace Forradia
                                    float height);
                 } imageRenderer_;
 
+                class ColorRenderer
+                {
+                  public:
+                    void FillRect(float x, float y, float width, float height,
+                                  Common::Matter::Coloring::Color color =
+                                      Common::Matter::Coloring::Colors::k_black);
+
+                    void DrawRect(float x, float y, float width, float height,
+                                  Common::Matter::Coloring::Color color =
+                                      Common::Matter::Coloring::Colors::k_black);
+
+                    void DrawLine(float x1, float y1, float x2, float y2,
+                                  Common::Matter::Coloring::Color color =
+                                      Common::Matter::Coloring::Colors::k_black);
+
+                  private:
+                    SDL_Rect CreateSDLRect(float x, float y, float width, float height);
+                } colorRenderer_;
+
                 class TextRenderer
                 {
                   public:
@@ -304,6 +341,138 @@ namespace Forradia
                 class IScene
                 {
                   public:
+                    class GUIComponent
+                    {
+                      public:
+                        GUIComponent() = default;
+
+                        GUIComponent(float x, float y);
+
+                        void Update();
+
+                        void Render();
+
+                        virtual bool OnMouseDown(Uint8 mouseButton);
+
+                        virtual bool OnMouseUp(Uint8 mouseButton, int clickSpeed);
+
+                        virtual bool OnKeyDown(SDL_Keycode key);
+
+                        virtual bool OnKeyUp(SDL_Keycode key);
+
+                        std::shared_ptr<GUIComponent>
+                        AddComponent(std::shared_ptr<GUIComponent> component);
+
+                        virtual Common::Matter::Geometry::PointF GetPosition();
+
+                        void SetYPosition(float y);
+
+                        virtual void SetPosition(Common::Matter::Geometry::PointF value)
+                        {
+                            position_ = value;
+                        }
+
+                        bool isVisible_{true};
+                        bool isEnabled_{true};
+
+                      protected:
+                        virtual void UpdateDerived()
+                        {
+                        }
+
+                        virtual void RenderDerived()
+                        {
+                        }
+
+                      private:
+                        std::vector<std::shared_ptr<GUIComponent>> components_;
+                        Common::Matter::Geometry::PointF position_{0.0f, 0.0f};
+                        GUIComponent *parent_{nullptr};
+                    };
+
+                    class GUI : public GUIComponent
+                    {
+                      public:
+                        using GUIComponent::GUIComponent;
+                    };
+
+                    class GUIPanel : public GUIComponent
+                    {
+                      public:
+                        GUIPanel(float x, float y, float width, float height);
+
+                        Common::Matter::Geometry::SizeF size_{0.0f, 0.0f};
+
+                      protected:
+                        virtual void RenderDerived() override;
+
+                        virtual std::string GetBackgroundImage();
+
+                        Common::Matter::Geometry::RectF GetBounds();
+
+                      private:
+                        inline static const std::string k_defaultBackgroundImage_{
+                            "GUIPanelBackground"};
+                    };
+
+                    class GUIButton : public GUIPanel
+                    {
+                      public:
+                        GUIButton(
+                            std::string_view text, float x, float y, float width, float height,
+                            std::function<void()> action,
+                            std::string_view backgroundImage = "GUIButtonBackground",
+                            std::string_view hoveredBackgroundImage = "GUIButtonHoveredBackground");
+
+                      protected:
+                        void UpdateDerived() override;
+
+                        void RenderDerived() override;
+
+                        bool OnMouseDown(Uint8 mouseButton) override;
+
+                        std::string GetBackgroundImage() override;
+
+                      private:
+                        const std::string k_backgroundImage_{"GUIButtonBackground"};
+                        const std::string k_hoveredBackgroundImage_{"GUIButtonHoveredBackground"};
+
+                        std::string text_;
+                        std::function<void()> action_;
+                        bool hovered_{false};
+                    };
+
+                    class GUIMeter : public GUIComponent
+                    {
+                      public:
+                        GUIMeter(float x, float y, float width, float height);
+
+                        Common::Matter::Geometry::SizeF size_;
+
+                      protected:
+                        virtual void RenderDerived() override;
+
+                        virtual float GetMeterProgress();
+
+                        virtual Common::Matter::Coloring::Color GetFilledColor();
+                    };
+
+                    class GUITextConsole : public GUIPanel
+                    {
+                      public:
+                        GUITextConsole();
+
+                        void PrintLine(std::string_view line);
+
+                      protected:
+                        void RenderDerived() override;
+
+                      private:
+                        static constexpr float k_lineHeight_{0.02f};
+
+                        std::vector<std::string> lines_;
+                    };
+
                     IScene();
 
                     void Initialize();
@@ -358,6 +527,8 @@ namespace Forradia
                     virtual void OnMouseUpDerived(Uint8 button, int clickSpeed)
                     {
                     }
+
+                    std::shared_ptr<GUI> gui_;
                 };
 
                 class IntroScene : public IScene

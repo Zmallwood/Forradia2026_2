@@ -27,6 +27,12 @@ namespace Forradia
         return {x - other.x, y - other.y};
     }
 
+    bool Game::Engine::Common::Matter::Geometry::RectF::Contains(
+        Game::Engine::Common::Matter::Geometry::PointF point)
+    {
+        return point.x >= x && point.x <= x + width && point.y >= y && point.y <= y + height;
+    }
+
     SDL_Color Game::Engine::Common::Matter::Coloring::Color::ToSDLColor()
     {
         return {static_cast<Uint8>(r * 255), static_cast<Uint8>(g * 255),
@@ -530,7 +536,354 @@ namespace Forradia
         }
     }
 
-    Game::Engine::SceneManager::IScene::IScene() //: gui_(std::make_shared<GUI>())
+    Game::Engine::SceneManager::IScene::GUIComponent::GUIComponent(float x, float y)
+        : position_(x, y)
+    {
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIComponent::Update()
+    {
+        if (!isEnabled_)
+        {
+            return;
+        }
+
+        if (parent_ && !parent_->isEnabled_)
+        {
+            return;
+        }
+
+        UpdateDerived();
+
+        for (const auto &component : components_)
+        {
+            component->Update();
+        }
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIComponent::Render()
+    {
+        if (!isVisible_ || !isEnabled_)
+        {
+            return;
+        }
+
+        if (parent_ && (!parent_->isVisible_ && !parent_->isEnabled_))
+        {
+            return;
+        }
+
+        RenderDerived();
+
+        for (const auto &component : components_)
+        {
+            component->Render();
+        }
+    }
+
+    bool Game::Engine::SceneManager::IScene::GUIComponent::OnMouseDown(Uint8 mouseButton)
+    {
+        if (!isVisible_ || !isEnabled_)
+        {
+            return false;
+        }
+
+        if (parent_ && (!parent_->isVisible_ && !parent_->isEnabled_))
+        {
+            return false;
+        }
+
+        if (std::any_of(components_.rbegin(), components_.rend(),
+                        [=](const std::shared_ptr<GUIComponent> &comp)
+                        { return comp->OnMouseDown(mouseButton); }))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool Game::Engine::SceneManager::IScene::GUIComponent::OnMouseUp(Uint8 mouseButton,
+                                                                     int clickSpeed)
+    {
+        if (!isVisible_ || !isEnabled_)
+        {
+            return false;
+        }
+
+        if (parent_ && (!parent_->isVisible_ && !parent_->isEnabled_))
+        {
+            return false;
+        }
+
+        if (std::any_of(components_.rbegin(), components_.rend(),
+                        [=](const std::shared_ptr<GUIComponent> &comp)
+                        { return comp->OnMouseUp(mouseButton, clickSpeed); }))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool Game::Engine::SceneManager::IScene::GUIComponent::OnKeyDown(SDL_Keycode key)
+    {
+        if (!isVisible_ || !isEnabled_)
+        {
+            return false;
+        }
+
+        if (parent_ && (!parent_->isVisible_ && !parent_->isEnabled_))
+        {
+            return false;
+        }
+
+        if (std::any_of(components_.rbegin(), components_.rend(),
+                        [=](const std::shared_ptr<GUIComponent> &comp)
+                        { return comp->OnKeyDown(key); }))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool Game::Engine::SceneManager::IScene::GUIComponent::OnKeyUp(SDL_Keycode key)
+    {
+        if (!isVisible_ || !isEnabled_)
+        {
+            return false;
+        }
+
+        if (parent_ && (!parent_->isVisible_ && !parent_->isEnabled_))
+        {
+            return false;
+        }
+
+        if (std::any_of(components_.rbegin(), components_.rend(),
+                        [=](const std::shared_ptr<GUIComponent> &comp)
+                        { return comp->OnKeyUp(key); }))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    std::shared_ptr<Game::Engine::SceneManager::IScene::GUIComponent>
+    Game::Engine::SceneManager::IScene::GUIComponent::AddComponent(
+        std::shared_ptr<GUIComponent> component)
+    {
+        component->parent_ = this;
+
+        components_.push_back(component);
+
+        return component;
+    }
+
+    Game::Engine::Common::Matter::Geometry::PointF
+    Game::Engine::SceneManager::IScene::GUIComponent::GetPosition()
+    {
+        using PointF = Game::Engine::Common::Matter::Geometry::PointF;
+
+        PointF finalPosition{0.0F, 0.0F};
+
+        if (parent_)
+        {
+            finalPosition += parent_->GetPosition();
+        }
+
+        finalPosition += position_;
+
+        return finalPosition;
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIComponent::SetYPosition(float y)
+    {
+        position_.y = y;
+    }
+
+    Game::Engine::SceneManager::IScene::GUIPanel::GUIPanel(float x, float y, float width,
+                                                           float height)
+        : GUIComponent(x, y), size_(width, height)
+    {
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIPanel::RenderDerived()
+    {
+        auto &ImageRenderer = Game::Instance().engine_.rendering_.imageRenderer_;
+
+        auto position{GetPosition()};
+
+        ImageRenderer.DrawImage(GetBackgroundImage(), position.x, position.y, size_.width,
+                                size_.height);
+    }
+
+    std::string Game::Engine::SceneManager::IScene::GUIPanel::GetBackgroundImage()
+    {
+        return k_defaultBackgroundImage_;
+    }
+
+    Game::Engine::Common::Matter::Geometry::RectF
+    Game::Engine::SceneManager::IScene::GUIPanel::GetBounds()
+    {
+        auto position{GetPosition()};
+
+        return {position.x, position.y, size_.width, size_.height};
+    }
+
+    Game::Engine::SceneManager::IScene::GUIButton::GUIButton(
+        std::string_view text, float x, float y, float width, float height,
+        std::function<void()> action, std::string_view backgroundImage,
+        std::string_view hoveredBackgroundImage)
+        : GUIPanel(x, y, width, height), text_(text), action_(action),
+          k_backgroundImage_(backgroundImage), k_hoveredBackgroundImage_(hoveredBackgroundImage)
+    {
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIButton::UpdateDerived()
+    {
+        GUIPanel::UpdateDerived();
+
+        auto &cursor = Game::Instance().engine_.minorComponents_.cursor_;
+
+        auto &GetMousePosition = Game::Engine::Common::MouseUtilities::GetMousePosition;
+
+        auto position{GetPosition()};
+
+        auto size{size_};
+
+        auto rect{Game::Engine::Common::Matter::Geometry::RectF{position.x, position.y, size.width,
+                                                                size.height}};
+
+        if (rect.Contains(GetMousePosition()))
+        {
+            hovered_ = true;
+
+            cursor.cursorStyle_ = Game::Engine::MinorComponents::Cursor::CursorStyles::Hovering;
+        }
+        else
+        {
+            hovered_ = false;
+        }
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIButton::RenderDerived()
+    {
+        GUIPanel::RenderDerived();
+
+        auto &textRenderer = Game::Instance().engine_.rendering_.textRenderer_;
+
+        auto position{GetPosition()};
+
+        auto size{size_};
+
+        textRenderer.DrawString(text_, position.x + size.width / 2, position.y + size.height / 2,
+                                Game::Engine::Rendering::TextRenderer::FontSizes::_12, true);
+    }
+
+    bool Game::Engine::SceneManager::IScene::GUIButton::OnMouseDown(Uint8 mouseButton)
+    {
+        auto &GetMousePosition = Game::Engine::Common::MouseUtilities::GetMousePosition;
+
+        if (!isVisible_)
+        {
+            return false;
+        }
+
+        auto mousePosition{GetMousePosition()};
+
+        if (GetBounds().Contains(mousePosition))
+        {
+            action_();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    std::string Game::Engine::SceneManager::IScene::GUIButton::GetBackgroundImage()
+    {
+        return hovered_ ? k_hoveredBackgroundImage_ : k_backgroundImage_;
+    }
+
+    Game::Engine::SceneManager::IScene::GUIMeter::GUIMeter(float x, float y, float width,
+                                                           float height)
+        : GUIComponent(x, y), size_(width, height)
+    {
+    }
+
+    void Game::Engine::SceneManager::IScene::GUIMeter::RenderDerived()
+    {
+        auto &colorRenderer = Game::Instance().engine_.rendering_.colorRenderer_;
+
+        auto position{GetPosition()};
+
+        auto size{size_};
+
+        colorRenderer.FillRect(position.x, position.y, size.width, size.height,
+                               Game::Engine::Common::Matter::Coloring::Colors::k_darkBlue);
+
+        colorRenderer.FillRect(position.x, position.y, GetMeterProgress() * size.width, size.height,
+                               GetFilledColor());
+
+        colorRenderer.DrawRect(position.x, position.y, size.width, size.height,
+                               Game::Engine::Common::Matter::Coloring::Colors::k_black);
+    }
+
+    float Game::Engine::SceneManager::IScene::GUIMeter::GetMeterProgress()
+    {
+        return 0.0f;
+    }
+
+    Game::Engine::Common::Matter::Coloring::Color
+    Game::Engine::SceneManager::IScene::GUIMeter::GetFilledColor()
+    {
+        return Game::Engine::Common::Matter::Coloring::Colors::k_yellowGray;
+    }
+
+    Game::Engine::SceneManager::IScene::GUITextConsole::GUITextConsole()
+        : GUIPanel(0.0f, 0.8f, 0.4f, 0.2f)
+    {
+    }
+
+    void Game::Engine::SceneManager::IScene::GUITextConsole::PrintLine(std::string_view line)
+    {
+        lines_.push_back(line.data());
+    }
+
+    void Game::Engine::SceneManager::IScene::GUITextConsole::RenderDerived()
+    {
+        GUIPanel::RenderDerived();
+
+        auto &textRenderer = Game::Instance().engine_.rendering_.textRenderer_;
+
+        auto position{GetPosition()};
+
+        auto size{size_};
+
+        auto maxNumLines{static_cast<int>(size.height / k_lineHeight_) - 1};
+
+        auto iStart{std::max(0, static_cast<int>(lines_.size() - maxNumLines))};
+
+        auto rowIndex{0};
+
+        for (auto line = iStart; line < lines_.size(); line++)
+        {
+            if (line > lines_.size() - 1)
+                break;
+
+            auto text{lines_[line]};
+
+            textRenderer.DrawString(text, position.x + 0.01f,
+                                    position.y + 0.01f + rowIndex * k_lineHeight_);
+
+            rowIndex++;
+        }
+    }
+
+    Game::Engine::SceneManager::IScene::IScene() : gui_(std::make_shared<GUI>())
     {
     }
 
@@ -546,7 +899,7 @@ namespace Forradia
 
     void Game::Engine::SceneManager::IScene::Update()
     {
-        // gui_->Update();
+        gui_->Update();
 
         UpdateDerived();
     }
@@ -555,47 +908,47 @@ namespace Forradia
     {
         RenderBeforeGUIDerived();
 
-        // gui_->Render();
+        gui_->Render();
 
         RenderAfterGUIDerived();
     }
 
     void Game::Engine::SceneManager::IScene::OnKeyDown(SDL_Keycode key)
     {
-        // if (gui_->OnKeyDown(key))
-        // {
-        //     return;
-        // }
+        if (gui_->OnKeyDown(key))
+        {
+            return;
+        }
 
         OnKeyDownDerived(key);
     }
 
     void Game::Engine::SceneManager::IScene::OnKeyUp(SDL_Keycode key)
     {
-        // if (gui_->OnKeyUp(key))
-        // {
-        //     return;
-        // }
+        if (gui_->OnKeyUp(key))
+        {
+            return;
+        }
 
         OnKeyUpDerived(key);
     }
 
     void Game::Engine::SceneManager::IScene::OnMouseDown(Uint8 button)
     {
-        // if (gui_->OnMouseDown(button))
-        // {
-        //     return;
-        // }
+        if (gui_->OnMouseDown(button))
+        {
+            return;
+        }
 
         OnMouseDownDerived(button);
     }
 
     void Game::Engine::SceneManager::IScene::OnMouseUp(Uint8 button, int clickSpeed)
     {
-        // if (gui_->OnMouseUp(button, clickSpeed))
-        // {
-        //     return;
-        // }
+        if (gui_->OnMouseUp(button, clickSpeed))
+        {
+            return;
+        }
 
         OnMouseUpDerived(button, clickSpeed);
     }
@@ -630,6 +983,75 @@ namespace Forradia
         auto hash{Hash(imageName)};
 
         DrawImage(hash, x, y, width, height);
+    }
+
+    void Game::Engine::Rendering::ColorRenderer::FillRect(
+        float x, float y, float width, float height,
+        Game::Engine::Common::Matter::Coloring::Color color)
+    {
+        auto &sdlDevice = Game::Instance().engine_.sdlDevice_;
+
+        auto rect{CreateSDLRect(x, y, width, height)};
+
+        auto sdlColor{color.ToSDLColor()};
+
+        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b,
+                               sdlColor.a);
+
+        SDL_RenderFillRect(sdlDevice.renderer_.get(), &rect);
+    }
+
+    void Game::Engine::Rendering::ColorRenderer::DrawRect(
+        float x, float y, float width, float height,
+        Game::Engine::Common::Matter::Coloring::Color color)
+    {
+        auto &sdlDevice = Game::Instance().engine_.sdlDevice_;
+
+        auto rect{CreateSDLRect(x, y, width, height)};
+
+        auto sdlColor{color.ToSDLColor()};
+
+        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b,
+                               sdlColor.a);
+
+        SDL_RenderDrawRect(sdlDevice.renderer_.get(), &rect);
+    }
+
+    void Game::Engine::Rendering::ColorRenderer::DrawLine(
+        float x1, float y1, float x2, float y2, Game::Engine::Common::Matter::Coloring::Color color)
+    {
+        auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
+
+        auto &sdlDevice = Game::Instance().engine_.sdlDevice_;
+
+        auto canvasSize{GetCanvasSize()};
+
+        auto destX1{static_cast<int>(x1 * canvasSize.width)};
+        auto destY1{static_cast<int>(y1 * canvasSize.height)};
+        auto destX2{static_cast<int>(x2 * canvasSize.width)};
+        auto destY2{static_cast<int>(y2 * canvasSize.height)};
+
+        auto sdlColor{color.ToSDLColor()};
+
+        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b,
+                               sdlColor.a);
+
+        SDL_RenderDrawLine(sdlDevice.renderer_.get(), destX1, destY1, destX2, destY2);
+    }
+
+    SDL_Rect Game::Engine::Rendering::ColorRenderer::CreateSDLRect(float x, float y, float width,
+                                                                   float height)
+    {
+        auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
+
+        auto canvasSize{GetCanvasSize()};
+
+        auto destX{static_cast<int>(std::floor(x * canvasSize.width))};
+        auto destY{static_cast<int>(std::floor(y * canvasSize.height))};
+        auto destWidth{static_cast<int>(std::ceil(width * canvasSize.width))};
+        auto destHeight{static_cast<int>(std::ceil(height * canvasSize.height))};
+
+        return SDL_Rect{destX, destY, destWidth, destHeight};
     }
 
     void Game::Engine::Rendering::TextRenderer::Initialize()
