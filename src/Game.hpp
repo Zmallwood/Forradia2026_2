@@ -292,20 +292,70 @@ namespace Forradia
 
                 void RenderCurrentScene();
 
+                void OnKeyDownCurrentScene(SDL_Keycode key);
+
+                void OnKeyUpCurrentScene(SDL_Keycode key);
+
+                void OnMouseDownCurrentScene(Uint8 button);
+
+                void OnMouseUpCurrentScene(Uint8 button, int clickSpeed);
+
               private:
                 class IScene
                 {
                   public:
+                    IScene();
+
+                    void Initialize();
+
                     void Update();
 
                     void Render();
 
+                    void OnEnter();
+
+                    void OnKeyDown(SDL_Keycode key);
+
+                    void OnKeyUp(SDL_Keycode key);
+
+                    void OnMouseDown(Uint8 button);
+
+                    void OnMouseUp(Uint8 button, int clickSpeed);
+
                   protected:
+                    virtual void InitializeDerived()
+                    {
+                    }
+
+                    virtual void OnEnterDerived()
+                    {
+                    }
+
                     virtual void UpdateDerived()
                     {
                     }
 
-                    virtual void RenderDerived()
+                    virtual void RenderBeforeGUIDerived()
+                    {
+                    }
+
+                    virtual void RenderAfterGUIDerived()
+                    {
+                    }
+
+                    virtual void OnKeyDownDerived(SDL_Keycode key)
+                    {
+                    }
+
+                    virtual void OnKeyUpDerived(SDL_Keycode key)
+                    {
+                    }
+
+                    virtual void OnMouseDownDerived(Uint8 button)
+                    {
+                    }
+
+                    virtual void OnMouseUpDerived(Uint8 button, int clickSpeed)
                     {
                     }
                 };
@@ -315,13 +365,13 @@ namespace Forradia
                   protected:
                     void UpdateDerived() override;
 
-                    void RenderDerived() override;
+                    void RenderBeforeGUIDerived() override;
                 };
 
                 class MainMenuScene : public IScene
                 {
                   protected:
-                    void RenderDerived() override;
+                    void RenderBeforeGUIDerived() override;
                 };
 
                 void AddScene(std::string_view sceneName, std::shared_ptr<IScene> scene);
@@ -333,6 +383,8 @@ namespace Forradia
             void PollEvents();
 
             bool running_{true};
+            int ticksLeftMouseButtonDown_{0};
+            int ticksRightMouseButtonDown_{0};
         } engine_;
     };
 }

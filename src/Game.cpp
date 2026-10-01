@@ -176,6 +176,8 @@ namespace Forradia
 
     void Game::Engine::PollEvents()
     {
+        auto &Now = Game::Engine::Common::TimeUtilities::Now;
+
         SDL_Event event;
 
         while (SDL_PollEvent(&event))
@@ -183,8 +185,51 @@ namespace Forradia
             switch (event.type)
             {
             case SDL_QUIT:
+            {
                 running_ = false;
                 break;
+            }
+            case SDL_KEYDOWN:
+            {
+                sceneManager_.OnKeyDownCurrentScene(event.key.keysym.sym);
+                break;
+            }
+            case SDL_KEYUP:
+            {
+                sceneManager_.OnKeyUpCurrentScene(event.key.keysym.sym);
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                sceneManager_.OnMouseDownCurrentScene(event.button.button);
+
+                switch (event.button.button)
+                {
+                case SDL_BUTTON_LEFT:
+                    ticksLeftMouseButtonDown_ = Now();
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    ticksRightMouseButtonDown_ = Now();
+                    break;
+                }
+                break;
+            }
+            case SDL_MOUSEBUTTONUP:
+            {
+                auto clickSpeed{0};
+
+                switch (event.button.button)
+                {
+                case SDL_BUTTON_LEFT:
+                    clickSpeed = Now() - ticksLeftMouseButtonDown_;
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    clickSpeed = Now() - ticksRightMouseButtonDown_;
+                    break;
+                }
+                sceneManager_.OnMouseUpCurrentScene(event.button.button, clickSpeed);
+                break;
+            }
             }
         }
     }
@@ -453,14 +498,106 @@ namespace Forradia
         }
     }
 
+    void Game::Engine::SceneManager::OnKeyDownCurrentScene(SDL_Keycode key)
+    {
+        if (scenes_.contains(currentScene_))
+        {
+            scenes_.at(currentScene_)->OnKeyDown(key);
+        }
+    }
+
+    void Game::Engine::SceneManager::OnKeyUpCurrentScene(SDL_Keycode key)
+    {
+        if (scenes_.contains(currentScene_))
+        {
+            scenes_.at(currentScene_)->OnKeyUp(key);
+        }
+    }
+
+    void Game::Engine::SceneManager::OnMouseDownCurrentScene(Uint8 button)
+    {
+        if (scenes_.contains(currentScene_))
+        {
+            scenes_.at(currentScene_)->OnMouseDown(button);
+        }
+    }
+
+    void Game::Engine::SceneManager::OnMouseUpCurrentScene(Uint8 button, int clickSpeed)
+    {
+        if (scenes_.contains(currentScene_))
+        {
+            scenes_.at(currentScene_)->OnMouseUp(button, clickSpeed);
+        }
+    }
+
+    Game::Engine::SceneManager::IScene::IScene() //: gui_(std::make_shared<GUI>())
+    {
+    }
+
+    void Game::Engine::SceneManager::IScene::Initialize()
+    {
+        InitializeDerived();
+    }
+
+    void Game::Engine::SceneManager::IScene::OnEnter()
+    {
+        OnEnterDerived();
+    }
+
     void Game::Engine::SceneManager::IScene::Update()
     {
+        // gui_->Update();
+
         UpdateDerived();
     }
 
     void Game::Engine::SceneManager::IScene::Render()
     {
-        RenderDerived();
+        RenderBeforeGUIDerived();
+
+        // gui_->Render();
+
+        RenderAfterGUIDerived();
+    }
+
+    void Game::Engine::SceneManager::IScene::OnKeyDown(SDL_Keycode key)
+    {
+        // if (gui_->OnKeyDown(key))
+        // {
+        //     return;
+        // }
+
+        OnKeyDownDerived(key);
+    }
+
+    void Game::Engine::SceneManager::IScene::OnKeyUp(SDL_Keycode key)
+    {
+        // if (gui_->OnKeyUp(key))
+        // {
+        //     return;
+        // }
+
+        OnKeyUpDerived(key);
+    }
+
+    void Game::Engine::SceneManager::IScene::OnMouseDown(Uint8 button)
+    {
+        // if (gui_->OnMouseDown(button))
+        // {
+        //     return;
+        // }
+
+        OnMouseDownDerived(button);
+    }
+
+    void Game::Engine::SceneManager::IScene::OnMouseUp(Uint8 button, int clickSpeed)
+    {
+        // if (gui_->OnMouseUp(button, clickSpeed))
+        // {
+        //     return;
+        // }
+
+        OnMouseUpDerived(button, clickSpeed);
     }
 
     void Game::Engine::Rendering::ImageRenderer::DrawImage(int imageNameHash, float x, float y,
@@ -564,7 +701,7 @@ namespace Forradia
         // Game::Instance().engine_.sceneManager_.GoToScene("MainMenuScene");
     }
 
-    void Game::Engine::SceneManager::IntroScene::RenderDerived()
+    void Game::Engine::SceneManager::IntroScene::RenderBeforeGUIDerived()
     {
         // std::cout << "IntroScene rendering" << std::endl;
 
@@ -575,7 +712,7 @@ namespace Forradia
         imageRenderer.DrawImage("ForradiaLogo", 0.2f, 0.2f, 0.6f, 0.2f);
     }
 
-    void Game::Engine::SceneManager::MainMenuScene::RenderDerived()
+    void Game::Engine::SceneManager::MainMenuScene::RenderBeforeGUIDerived()
     {
         // std::cout << "MainMenuScene rendering" << std::endl;
     }
