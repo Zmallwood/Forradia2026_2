@@ -592,6 +592,23 @@ namespace Forradia
                     {
                       public:
                         void GenerateNewWorld();
+
+                      private:
+                        void ClearWithGrass();
+
+                        void GenerateDirt();
+
+                        void GenerateWater();
+
+                        void GenerateElevation();
+
+                        void GenerateRock();
+
+                        void GenerateLargeObjects();
+
+                        void GenerateSmallObjects();
+
+                        void GenerateCreatures();
                     } worldGenerator_;
                 };
 
@@ -702,6 +719,21 @@ namespace Forradia
 
                     WorldArea();
 
+                    Common::Matter::Geometry::Size GetSize();
+
+                    bool IsValidCoordinate(int x, int y);
+
+                    bool IsValidCoordinate(Common::Matter::Geometry::Point coordinate);
+
+                    std::shared_ptr<Tile> GetTile(int x, int y);
+
+                    std::shared_ptr<Tile> GetTile(Common::Matter::Geometry::Point coordinate);
+
+                    std::unordered_map<std::shared_ptr<Tile::Creature>,
+                                       Common::Matter::Geometry::Point>
+                        creaturesMirror_;
+
+                  private:
                     std::vector<std::vector<std::shared_ptr<Tile>>> tiles_;
                 };
 
