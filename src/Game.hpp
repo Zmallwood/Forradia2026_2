@@ -42,6 +42,7 @@ namespace Forradia
                 class Constants
                 {
                   public:
+                    static constexpr float k_smallValue{0.0005f};
                     static constexpr int k_oneSecondMillis{1000};
                 };
 

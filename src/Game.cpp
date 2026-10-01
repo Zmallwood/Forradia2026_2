@@ -2180,5 +2180,251 @@ namespace Forradia
 
     void Game::Engine::SceneManager::MainScene::WorldView::Render()
     {
+        auto &sdlDevice{Game::Instance().engine_.sdlDevice_};
+
+        auto &colorRenderer{Game::Instance().engine_.rendering_.colorRenderer_};
+
+        auto &imageRenderer{Game::Instance().engine_.rendering_.imageRenderer_};
+
+        auto &world{Game::Instance().engine_.world_};
+
+        auto &imageBank{Game::Instance().engine_.imageBank_};
+
+        auto &gameProperties{Game::Instance().engine_.configuration_.gameProperties_};
+
+        auto &player{Game::Instance().engine_.coreGameObjects_.player_};
+
+        auto &Hash{Game::Engine::Common::Hash};
+
+        auto &Now{Game::Engine::Common::TimeUtilities::Now};
+
+        auto &ConvertWidthToHeight{Game::Engine::Common::CanvasUtilities::ConvertWidthToHeight};
+
+        using Point = Game::Engine::Common::Matter::Geometry::Point;
+
+        sdlDevice.Clip(0.0f, 0.0f, 0.5f, 1.0f);
+
+        auto viewWidth{gameProperties.k_viewWidth_};
+
+        colorRenderer.FillRect(0.0f, 0.0f, viewWidth, 1.0f, Common::Matter::Coloring::Colors::k_black);
+
+        auto worldArea{world.currentWorldArea_};
+
+        auto playerTile{worldArea->GetTile(player.position_)};
+
+        auto playerElevation{0};
+
+        if (playerTile)
+        {
+            playerElevation = playerTile->elevation_;
+        }
+
+        // auto hoveredCoordinate{_<TileHovering>().hoveredCoordinate_};
+
+        auto facedTile{player.facedTileCoordinate_};
+
+        auto tileWidth{gameProperties.k_tileWidth_};
+        auto tileHeight{ConvertWidthToHeight(tileWidth)};
+
+        for (auto y = -6; y < 11 + 6; y++)
+        {
+            for (auto x = -6; x < 11 + 6; x++)
+            {
+                auto xCoordinate{player.position_.x - 5 + x};
+                auto yCoordinate{player.position_.y - 5 + y};
+
+                if (!worldArea->IsValidCoordinate(xCoordinate, yCoordinate))
+                {
+                    continue;
+                }
+
+                auto numBlockingObjects{0};
+
+                auto dx{player.position_.x - xCoordinate};
+                auto dy{player.position_.y - yCoordinate};
+
+                if (dx != 0 || dy != 0)
+                {
+                    auto numSteps{std::max(std::abs(dx), std::abs(dy))};
+
+                    auto stepX{static_cast<float>(dx) / numSteps};
+                    auto stepY{static_cast<float>(dy) / numSteps};
+
+                    auto currentXf{static_cast<float>(xCoordinate) + stepX};
+                    auto currentYf{static_cast<float>(yCoordinate) + stepY};
+
+                    for (auto i = 0; i < numSteps - 1; i++)
+                    {
+                        auto currentX{static_cast<int>(currentXf)};
+                        auto currentY{static_cast<int>(currentYf)};
+
+                        auto tile{worldArea->GetTile(currentX, currentY)};
+
+                        if (!tile)
+                        {
+                            continue;
+                        }
+
+                        for (auto object : tile->tileObjects_->objects_)
+                        {
+                            // if (!_<ObjectIndex>().IsSmallObject(object.second->type_))
+                            // {
+                            //     numBlockingObjects++;
+
+                            //     break;
+                            // }
+                        }
+
+                        currentXf += stepX;
+                        currentYf += stepY;
+                    }
+
+                    if (numBlockingObjects >= 2)
+                    {
+                        continue;
+                    }
+                }
+
+                auto tile{worldArea->GetTile(xCoordinate, yCoordinate)};
+
+                auto elevation{tile->elevation_};
+
+                Point coordinateNorth{xCoordinate, yCoordinate - 1};
+                Point coordinateEast{xCoordinate + 1, yCoordinate};
+                Point coordinateSouth{xCoordinate, yCoordinate + 1};
+                Point coordinateWest{xCoordinate - 1, yCoordinate};
+
+                auto elevationNorth{elevation};
+                auto elevationEast{elevation};
+                auto elevationSouth{elevation};
+                auto elevationWest{elevation};
+
+                if (worldArea->IsValidCoordinate(coordinateNorth))
+                {
+                    elevationNorth = worldArea->GetTile(coordinateNorth)->elevation_;
+                }
+
+                if (worldArea->IsValidCoordinate(coordinateEast))
+                {
+                    elevationEast = worldArea->GetTile(coordinateEast)->elevation_;
+                }
+
+                if (worldArea->IsValidCoordinate(coordinateSouth))
+                {
+                    elevationSouth = worldArea->GetTile(coordinateSouth)->elevation_;
+                }
+
+                if (worldArea->IsValidCoordinate(coordinateWest))
+                {
+                    elevationWest = worldArea->GetTile(coordinateWest)->elevation_;
+                }
+
+                auto tileX{0.25f - tileWidth / 2 + x * tileWidth / 2 - y * tileWidth / 2};
+
+                auto tileY{0.5f - 5.5f * tileHeight + x * tileHeight / 2 + y * tileHeight / 2 +
+                           playerElevation * tileHeight / 4};
+
+                for (auto i = 0; i < elevation; i++)
+                {
+                    imageRenderer.DrawImage("Elevation", tileX, tileY + tileHeight / 4, tileWidth, tileHeight * 3 / 4);
+
+                    tileY -= tileHeight / 4;
+                }
+
+                auto ground{tile->ground_};
+
+                if (ground == Hash("GroundWater"))
+                {
+                    auto waterAnimIndex{((Now() + 10 * xCoordinate * yCoordinate) % 900) / 300};
+
+                    std::string groundImageName{"GroundWater_" + std::to_string(waterAnimIndex)};
+
+                    ground = Hash(groundImageName);
+                }
+
+                imageRenderer.DrawImage(ground, tileX, tileY, tileWidth + Game::Engine::Common::Constants::k_smallValue,
+                                        tileHeight + Game::Engine::Common::Constants::k_smallValue);
+
+                if (elevation > elevationNorth)
+                {
+                    imageRenderer.DrawImage("ElevationEdgeNorth", tileX, tileY, tileWidth, tileHeight);
+                }
+
+                if (elevation > elevationEast)
+                {
+                    imageRenderer.DrawImage("ElevationEdgeEast", tileX, tileY, tileWidth, tileHeight);
+                }
+
+                if (elevation > elevationSouth)
+                {
+                    imageRenderer.DrawImage("ElevationEdgeSouth", tileX, tileY, tileWidth, tileHeight);
+                }
+
+                if (elevation > elevationWest)
+                {
+                    imageRenderer.DrawImage("ElevationEdgeWest", tileX, tileY, tileWidth, tileHeight);
+                }
+
+                if (xCoordinate == facedTile.x && yCoordinate == facedTile.y)
+                {
+                    imageRenderer.DrawImage("FacedTile", tileX, tileY, tileWidth, tileHeight);
+                }
+
+                // if (xCoordinate == hoveredCoordinate.x && yCoordinate == hoveredCoordinate.y)
+                // {
+                //     imageRenderer.DrawImage("HoveredTile", tileX, tileY, tileWidth, tileHeight);
+                // }
+
+                auto objects{tile->tileObjects_->objects_};
+
+                for (auto entry : objects)
+                {
+                    auto object{entry.second};
+
+                    auto objectType{object->type_};
+
+                    // auto isSmallObject{_<ObjectIndex>().IsSmallObject(objectType)};
+
+                    // if (isSmallObject)
+                    // {
+                    //     continue;
+                    // }
+
+                    auto imageSize{imageBank.GetImageSize(objectType)};
+
+                    auto objectWidth{imageSize.width / 60.0f * tileWidth};
+                    auto objectHeight{imageSize.height / 60.0f * tileHeight};
+
+                    auto objectX{tileX + tileWidth / 2 - objectWidth / 2};
+                    auto objectY{tileY + tileHeight / 2 - objectHeight};
+
+                    imageRenderer.DrawImage(objectType, objectX, objectY, objectWidth, objectHeight);
+                }
+
+                auto creature{tile->creature_};
+
+                if (creature)
+                {
+                    auto creatureType{creature->type_};
+
+                    auto imageSize{imageBank.GetImageSize(creatureType)};
+
+                    auto creatureWidth{imageSize.width / 60.0f * tileWidth};
+                    auto creatureHeight{imageSize.height / 60.0f * tileHeight};
+
+                    auto creatureX{tileX + tileWidth / 2 - creatureWidth / 2};
+                    auto creatureY{tileY + tileHeight / 2 - creatureHeight};
+
+                    imageRenderer.DrawImage(creatureType, creatureX, creatureY, creatureWidth, creatureHeight);
+                }
+
+                if (xCoordinate == player.position_.x && yCoordinate == player.position_.y)
+                {
+                    imageRenderer.DrawImage("Player", tileX, tileY - tileHeight / 2, tileWidth, tileHeight);
+                }
+            }
+        }
+
+        sdlDevice.ResetClip();
     }
 }
