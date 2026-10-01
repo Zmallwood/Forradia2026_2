@@ -255,24 +255,20 @@ namespace Forradia
                   public:
                     void DrawImage(int imageNameHash, float x, float y, float width, float height);
 
-                    void DrawImage(std::string_view imageName, float x, float y, float width,
-                                   float height);
+                    void DrawImage(std::string_view imageName, float x, float y, float width, float height);
                 } imageRenderer_;
 
                 class ColorRenderer
                 {
                   public:
                     void FillRect(float x, float y, float width, float height,
-                                  Common::Matter::Coloring::Color color =
-                                      Common::Matter::Coloring::Colors::k_black);
+                                  Common::Matter::Coloring::Color color = Common::Matter::Coloring::Colors::k_black);
 
                     void DrawRect(float x, float y, float width, float height,
-                                  Common::Matter::Coloring::Color color =
-                                      Common::Matter::Coloring::Colors::k_black);
+                                  Common::Matter::Coloring::Color color = Common::Matter::Coloring::Colors::k_black);
 
                     void DrawLine(float x1, float y1, float x2, float y2,
-                                  Common::Matter::Coloring::Color color =
-                                      Common::Matter::Coloring::Colors::k_black);
+                                  Common::Matter::Coloring::Color color = Common::Matter::Coloring::Colors::k_black);
 
                   private:
                     SDL_Rect CreateSDLRect(float x, float y, float width, float height);
@@ -290,10 +286,9 @@ namespace Forradia
 
                     void Initialize();
 
-                    void DrawString(std::string_view text, float x, float y,
-                                    FontSizes fontSize = FontSizes::_12, bool centered = false,
-                                    Common::Matter::Coloring::Color color =
-                                        Common::Matter::Coloring::Colors::k_wheat);
+                    void DrawString(std::string_view text, float x, float y, FontSizes fontSize = FontSizes::_12,
+                                    bool centered = false,
+                                    Common::Matter::Coloring::Color color = Common::Matter::Coloring::Colors::k_wheat);
 
                   private:
                     void AddFont(FontSizes fontSize);
@@ -353,8 +348,7 @@ namespace Forradia
                     static constexpr float k_viewWidth_{0.5f};
                     static constexpr float k_largeObjectScale_{0.22f};
                     static constexpr float k_smallObjectScale_{0.08f};
-                    static constexpr Common::Matter::Geometry::PointF k_firstPersonViewMargin_{
-                        0.03f, 0.01f};
+                    static constexpr Common::Matter::Geometry::PointF k_firstPersonViewMargin_{0.03f, 0.01f};
                 } gameProperties_;
             } configuration_;
 
@@ -390,8 +384,7 @@ namespace Forradia
 
                             void Clear();
 
-                            void AddObject(int objectType,
-                                           Common::Matter::Geometry::Point position = {-1, -1});
+                            void AddObject(int objectType, Common::Matter::Geometry::Point position = {-1, -1});
 
                             void AddObject(std::string_view objectName,
                                            Common::Matter::Geometry::Point position = {-1, -1});
@@ -403,8 +396,7 @@ namespace Forradia
 
                             std::shared_ptr<Object> PickObject(std::shared_ptr<Object> object);
 
-                            std::map<Common::Matter::Geometry::Point, std::shared_ptr<Object>>
-                                objects_;
+                            std::map<Common::Matter::Geometry::Point, std::shared_ptr<Object>> objects_;
                         };
 
                         class Creature
@@ -455,8 +447,7 @@ namespace Forradia
 
                     std::shared_ptr<Tile> GetTile(Common::Matter::Geometry::Point coordinate);
 
-                    std::unordered_map<std::shared_ptr<Tile::Creature>,
-                                       Common::Matter::Geometry::Point>
+                    std::unordered_map<std::shared_ptr<Tile::Creature>, Common::Matter::Geometry::Point>
                         creaturesMirror_;
 
                   private:
@@ -477,6 +468,22 @@ namespace Forradia
                     class PlayerInventory
                     {
                       public:
+                        void Clear();
+
+                        void AddObject(std::string_view objectName);
+
+                        void AddObject(std::shared_ptr<World::WorldArea::Tile::TileObjects::Object> object,
+                                       int slotIndex);
+
+                        std::shared_ptr<World::WorldArea::Tile::TileObjects::Object> GetObject(int index);
+
+                        std::shared_ptr<World::WorldArea::Tile::TileObjects::Object> PickObject(int index);
+
+                        bool HasObject(int index);
+
+                      private:
+                        static constexpr int k_maxObjects_{1000};
+                        std::unordered_map<int, std::shared_ptr<World::WorldArea::Tile::TileObjects::Object>> objects_;
                     } playerInventory_;
 
                     void Initialize();
@@ -545,8 +552,7 @@ namespace Forradia
 
                         virtual bool OnKeyUp(SDL_Keycode key);
 
-                        std::shared_ptr<GUIComponent>
-                        AddComponent(std::shared_ptr<GUIComponent> component);
+                        std::shared_ptr<GUIComponent> AddComponent(std::shared_ptr<GUIComponent> component);
 
                         virtual Common::Matter::Geometry::PointF GetPosition();
 
@@ -596,18 +602,16 @@ namespace Forradia
                         Common::Matter::Geometry::RectF GetBounds();
 
                       private:
-                        inline static const std::string k_defaultBackgroundImage_{
-                            "GUIPanelBackground"};
+                        inline static const std::string k_defaultBackgroundImage_{"GUIPanelBackground"};
                     };
 
                     class GUIButton : public GUIPanel
                     {
                       public:
-                        GUIButton(
-                            std::string_view text, float x, float y, float width, float height,
-                            std::function<void()> action,
-                            std::string_view backgroundImage = "GUIButtonBackground",
-                            std::string_view hoveredBackgroundImage = "GUIButtonHoveredBackground");
+                        GUIButton(std::string_view text, float x, float y, float width, float height,
+                                  std::function<void()> action,
+                                  std::string_view backgroundImage = "GUIButtonBackground",
+                                  std::string_view hoveredBackgroundImage = "GUIButtonHoveredBackground");
 
                       protected:
                         void UpdateDerived() override;
@@ -647,8 +651,7 @@ namespace Forradia
                       public:
                         static std::shared_ptr<GUITextConsole> InstancePtr()
                         {
-                            static std::shared_ptr<GUITextConsole> instancePtr{
-                                new GUITextConsole()};
+                            static std::shared_ptr<GUITextConsole> instancePtr{new GUITextConsole()};
 
                             return instancePtr;
                         }

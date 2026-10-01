@@ -10,4 +10,4 @@ cmake --build .
 
 mkdir -p ../bin/
 
-cp ./Darktale ../bin/
+cp ./Forradia ../bin/

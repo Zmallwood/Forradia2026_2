@@ -4,6 +4,6 @@ Copy-Item -Path "..\resources" -Destination ../bin/ -Recurse -Force
 
 cd ../bin/
 
-.\Darktale.exe
+.\Forradia.exe
 
 cd ../scripts/

@@ -33,16 +33,15 @@ namespace Forradia
         return {x - other.x, y - other.y};
     }
 
-    bool Game::Engine::Common::Matter::Geometry::RectF::Contains(
-        Game::Engine::Common::Matter::Geometry::PointF point)
+    bool Game::Engine::Common::Matter::Geometry::RectF::Contains(Game::Engine::Common::Matter::Geometry::PointF point)
     {
         return point.x >= x && point.x <= x + width && point.y >= y && point.y <= y + height;
     }
 
     SDL_Color Game::Engine::Common::Matter::Coloring::Color::ToSDLColor()
     {
-        return {static_cast<Uint8>(r * 255), static_cast<Uint8>(g * 255),
-                static_cast<Uint8>(b * 255), static_cast<Uint8>(a * 255)};
+        return {static_cast<Uint8>(r * 255), static_cast<Uint8>(g * 255), static_cast<Uint8>(b * 255),
+                static_cast<Uint8>(a * 255)};
     }
 
     void Game::Start()
@@ -114,8 +113,7 @@ namespace Forradia
         TTF_CloseFont(font);
     }
 
-    std::string Game::Engine::Common::StringUtilities::Replace(std::string_view text,
-                                                               std::string_view oldValue,
+    std::string Game::Engine::Common::StringUtilities::Replace(std::string_view text, std::string_view oldValue,
                                                                std::string_view newValue)
     {
         std::string result(text);
@@ -138,8 +136,7 @@ namespace Forradia
         return fileName.substr(0, fileName.find_last_of("."));
     }
 
-    Game::Engine::Common::Matter::Geometry::Size
-    Game::Engine::Common::CanvasUtilities::GetCanvasSize()
+    Game::Engine::Common::Matter::Geometry::Size Game::Engine::Common::CanvasUtilities::GetCanvasSize()
     {
         auto &sldDevice{Game::Instance().engine_.sdlDevice_};
 
@@ -173,8 +170,7 @@ namespace Forradia
         return SDL_GetTicks();
     }
 
-    Game::Engine::Common::Matter::Geometry::PointF
-    Game::Engine::Common::MouseUtilities::GetMousePosition()
+    Game::Engine::Common::Matter::Geometry::PointF Game::Engine::Common::MouseUtilities::GetMousePosition()
     {
         auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
 
@@ -187,8 +183,7 @@ namespace Forradia
 
         SDL_GetMouseState(&x, &y);
 
-        return {static_cast<float>(x) / canvasSize.width,
-                static_cast<float>(y) / canvasSize.height};
+        return {static_cast<float>(x) / canvasSize.width, static_cast<float>(y) / canvasSize.height};
     }
 
     int Game::Engine::Common::NumberUtilities::InvertSpeed(float speed)
@@ -262,13 +257,12 @@ namespace Forradia
 
         auto windowFlags{SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP};
 
-        window_ = std::shared_ptr<SDL_Window>(
-            SDL_CreateWindow(k_windowName_.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                             800, 600, windowFlags),
-            SDLDeleter());
+        window_ = std::shared_ptr<SDL_Window>(SDL_CreateWindow(k_windowName_.data(), SDL_WINDOWPOS_CENTERED,
+                                                               SDL_WINDOWPOS_CENTERED, 800, 600, windowFlags),
+                                              SDLDeleter());
 
-        renderer_ = std::shared_ptr<SDL_Renderer>(
-            SDL_CreateRenderer(window_.get(), -1, SDL_RENDERER_ACCELERATED), SDLDeleter());
+        renderer_ = std::shared_ptr<SDL_Renderer>(SDL_CreateRenderer(window_.get(), -1, SDL_RENDERER_ACCELERATED),
+                                                  SDLDeleter());
     }
 
     void Game::Engine::SDLDevice::ClearCanvas()
@@ -376,16 +370,14 @@ namespace Forradia
         return nullptr;
     }
 
-    Game::Engine::Common::Matter::Geometry::Size
-    Game::Engine::ImageBank::GetImageSize(int imageNameHash)
+    Game::Engine::Common::Matter::Geometry::Size Game::Engine::ImageBank::GetImageSize(int imageNameHash)
     {
         auto width{0};
         auto height{0};
 
         if (images_.contains(imageNameHash))
         {
-            SDL_QueryTexture(images_.at(imageNameHash).texture.get(), nullptr, nullptr, &width,
-                             &height);
+            SDL_QueryTexture(images_.at(imageNameHash).texture.get(), nullptr, nullptr, &width, &height);
         }
 
         return {width, height};
@@ -397,8 +389,8 @@ namespace Forradia
         {
             auto surface{images_.at(imageNameHash).surface.get()};
 
-            if (!surface || !surface->pixels || surface->w <= 0 || surface->h <= 0 || x < 0.0f ||
-                y < 0.0f || x >= 1.0f || y >= 1.0f)
+            if (!surface || !surface->pixels || surface->w <= 0 || surface->h <= 0 || x < 0.0f || y < 0.0f ||
+                x >= 1.0f || y >= 1.0f)
             {
                 return false;
             }
@@ -498,8 +490,8 @@ namespace Forradia
             break;
         }
 
-        imageRenderer.DrawImage(cursorImage, mousePosition.x - cursorWidth / 2,
-                                mousePosition.y - cursorHeight / 2, cursorWidth, cursorHeight);
+        imageRenderer.DrawImage(cursorImage, mousePosition.x - cursorWidth / 2, mousePosition.y - cursorHeight / 2,
+                                cursorWidth, cursorHeight);
     }
 
     void Game::Engine::SceneManager::Initialize()
@@ -512,8 +504,7 @@ namespace Forradia
         GoToScene("IntroScene");
     }
 
-    void Game::Engine::SceneManager::AddScene(std::string_view sceneName,
-                                              std::shared_ptr<IScene> scene)
+    void Game::Engine::SceneManager::AddScene(std::string_view sceneName, std::shared_ptr<IScene> scene)
     {
         auto &Hash = Game::Engine::Common::Hash;
 
@@ -584,8 +575,7 @@ namespace Forradia
         }
     }
 
-    Game::Engine::SceneManager::IScene::GUIComponent::GUIComponent(float x, float y)
-        : position_(x, y)
+    Game::Engine::SceneManager::IScene::GUIComponent::GUIComponent(float x, float y) : position_(x, y)
     {
     }
 
@@ -642,8 +632,7 @@ namespace Forradia
         }
 
         if (std::any_of(components_.rbegin(), components_.rend(),
-                        [=](const std::shared_ptr<GUIComponent> &comp)
-                        { return comp->OnMouseDown(mouseButton); }))
+                        [=](const std::shared_ptr<GUIComponent> &comp) { return comp->OnMouseDown(mouseButton); }))
         {
             return true;
         }
@@ -651,8 +640,7 @@ namespace Forradia
         return false;
     }
 
-    bool Game::Engine::SceneManager::IScene::GUIComponent::OnMouseUp(Uint8 mouseButton,
-                                                                     int clickSpeed)
+    bool Game::Engine::SceneManager::IScene::GUIComponent::OnMouseUp(Uint8 mouseButton, int clickSpeed)
     {
         if (!isVisible_ || !isEnabled_)
         {
@@ -664,8 +652,7 @@ namespace Forradia
             return false;
         }
 
-        if (std::any_of(components_.rbegin(), components_.rend(),
-                        [=](const std::shared_ptr<GUIComponent> &comp)
+        if (std::any_of(components_.rbegin(), components_.rend(), [=](const std::shared_ptr<GUIComponent> &comp)
                         { return comp->OnMouseUp(mouseButton, clickSpeed); }))
         {
             return true;
@@ -687,8 +674,7 @@ namespace Forradia
         }
 
         if (std::any_of(components_.rbegin(), components_.rend(),
-                        [=](const std::shared_ptr<GUIComponent> &comp)
-                        { return comp->OnKeyDown(key); }))
+                        [=](const std::shared_ptr<GUIComponent> &comp) { return comp->OnKeyDown(key); }))
         {
             return true;
         }
@@ -709,8 +695,7 @@ namespace Forradia
         }
 
         if (std::any_of(components_.rbegin(), components_.rend(),
-                        [=](const std::shared_ptr<GUIComponent> &comp)
-                        { return comp->OnKeyUp(key); }))
+                        [=](const std::shared_ptr<GUIComponent> &comp) { return comp->OnKeyUp(key); }))
         {
             return true;
         }
@@ -719,8 +704,7 @@ namespace Forradia
     }
 
     std::shared_ptr<Game::Engine::SceneManager::IScene::GUIComponent>
-    Game::Engine::SceneManager::IScene::GUIComponent::AddComponent(
-        std::shared_ptr<GUIComponent> component)
+    Game::Engine::SceneManager::IScene::GUIComponent::AddComponent(std::shared_ptr<GUIComponent> component)
     {
         component->parent_ = this;
 
@@ -729,8 +713,7 @@ namespace Forradia
         return component;
     }
 
-    Game::Engine::Common::Matter::Geometry::PointF
-    Game::Engine::SceneManager::IScene::GUIComponent::GetPosition()
+    Game::Engine::Common::Matter::Geometry::PointF Game::Engine::SceneManager::IScene::GUIComponent::GetPosition()
     {
         using PointF = Game::Engine::Common::Matter::Geometry::PointF;
 
@@ -751,8 +734,7 @@ namespace Forradia
         position_.y = y;
     }
 
-    Game::Engine::SceneManager::IScene::GUIPanel::GUIPanel(float x, float y, float width,
-                                                           float height)
+    Game::Engine::SceneManager::IScene::GUIPanel::GUIPanel(float x, float y, float width, float height)
         : GUIComponent(x, y), size_(width, height)
     {
     }
@@ -763,8 +745,7 @@ namespace Forradia
 
         auto position{GetPosition()};
 
-        ImageRenderer.DrawImage(GetBackgroundImage(), position.x, position.y, size_.width,
-                                size_.height);
+        ImageRenderer.DrawImage(GetBackgroundImage(), position.x, position.y, size_.width, size_.height);
     }
 
     std::string Game::Engine::SceneManager::IScene::GUIPanel::GetBackgroundImage()
@@ -772,20 +753,19 @@ namespace Forradia
         return k_defaultBackgroundImage_;
     }
 
-    Game::Engine::Common::Matter::Geometry::RectF
-    Game::Engine::SceneManager::IScene::GUIPanel::GetBounds()
+    Game::Engine::Common::Matter::Geometry::RectF Game::Engine::SceneManager::IScene::GUIPanel::GetBounds()
     {
         auto position{GetPosition()};
 
         return {position.x, position.y, size_.width, size_.height};
     }
 
-    Game::Engine::SceneManager::IScene::GUIButton::GUIButton(
-        std::string_view text, float x, float y, float width, float height,
-        std::function<void()> action, std::string_view backgroundImage,
-        std::string_view hoveredBackgroundImage)
-        : GUIPanel(x, y, width, height), text_(text), action_(action),
-          k_backgroundImage_(backgroundImage), k_hoveredBackgroundImage_(hoveredBackgroundImage)
+    Game::Engine::SceneManager::IScene::GUIButton::GUIButton(std::string_view text, float x, float y, float width,
+                                                             float height, std::function<void()> action,
+                                                             std::string_view backgroundImage,
+                                                             std::string_view hoveredBackgroundImage)
+        : GUIPanel(x, y, width, height), text_(text), action_(action), k_backgroundImage_(backgroundImage),
+          k_hoveredBackgroundImage_(hoveredBackgroundImage)
     {
     }
 
@@ -801,8 +781,7 @@ namespace Forradia
 
         auto size{size_};
 
-        auto rect{Game::Engine::Common::Matter::Geometry::RectF{position.x, position.y, size.width,
-                                                                size.height}};
+        auto rect{Game::Engine::Common::Matter::Geometry::RectF{position.x, position.y, size.width, size.height}};
 
         if (rect.Contains(GetMousePosition()))
         {
@@ -856,8 +835,7 @@ namespace Forradia
         return hovered_ ? k_hoveredBackgroundImage_ : k_backgroundImage_;
     }
 
-    Game::Engine::SceneManager::IScene::GUIMeter::GUIMeter(float x, float y, float width,
-                                                           float height)
+    Game::Engine::SceneManager::IScene::GUIMeter::GUIMeter(float x, float y, float width, float height)
         : GUIComponent(x, y), size_(width, height)
     {
     }
@@ -873,8 +851,7 @@ namespace Forradia
         colorRenderer.FillRect(position.x, position.y, size.width, size.height,
                                Game::Engine::Common::Matter::Coloring::Colors::k_darkBlue);
 
-        colorRenderer.FillRect(position.x, position.y, GetMeterProgress() * size.width, size.height,
-                               GetFilledColor());
+        colorRenderer.FillRect(position.x, position.y, GetMeterProgress() * size.width, size.height, GetFilledColor());
 
         colorRenderer.DrawRect(position.x, position.y, size.width, size.height,
                                Game::Engine::Common::Matter::Coloring::Colors::k_black);
@@ -885,14 +862,12 @@ namespace Forradia
         return 0.0f;
     }
 
-    Game::Engine::Common::Matter::Coloring::Color
-    Game::Engine::SceneManager::IScene::GUIMeter::GetFilledColor()
+    Game::Engine::Common::Matter::Coloring::Color Game::Engine::SceneManager::IScene::GUIMeter::GetFilledColor()
     {
         return Game::Engine::Common::Matter::Coloring::Colors::k_yellowGray;
     }
 
-    Game::Engine::SceneManager::IScene::GUITextConsole::GUITextConsole()
-        : GUIPanel(0.0f, 0.8f, 0.4f, 0.2f)
+    Game::Engine::SceneManager::IScene::GUITextConsole::GUITextConsole() : GUIPanel(0.0f, 0.8f, 0.4f, 0.2f)
     {
     }
 
@@ -924,8 +899,7 @@ namespace Forradia
 
             auto text{lines_[line]};
 
-            textRenderer.DrawString(text, position.x + 0.01f,
-                                    position.y + 0.01f + rowIndex * k_lineHeight_);
+            textRenderer.DrawString(text, position.x + 0.01f, position.y + 0.01f + rowIndex * k_lineHeight_);
 
             rowIndex++;
         }
@@ -1001,8 +975,8 @@ namespace Forradia
         OnMouseUpDerived(button, clickSpeed);
     }
 
-    void Game::Engine::Rendering::ImageRenderer::DrawImage(int imageNameHash, float x, float y,
-                                                           float width, float height)
+    void Game::Engine::Rendering::ImageRenderer::DrawImage(int imageNameHash, float x, float y, float width,
+                                                           float height)
     {
         auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
 
@@ -1023,8 +997,8 @@ namespace Forradia
         SDL_RenderCopy(sldDevice.renderer_.get(), image.get(), nullptr, &rect);
     }
 
-    void Game::Engine::Rendering::ImageRenderer::DrawImage(std::string_view imageName, float x,
-                                                           float y, float width, float height)
+    void Game::Engine::Rendering::ImageRenderer::DrawImage(std::string_view imageName, float x, float y, float width,
+                                                           float height)
     {
         auto &Hash = Game::Engine::Common::Hash;
 
@@ -1033,9 +1007,8 @@ namespace Forradia
         DrawImage(hash, x, y, width, height);
     }
 
-    void Game::Engine::Rendering::ColorRenderer::FillRect(
-        float x, float y, float width, float height,
-        Game::Engine::Common::Matter::Coloring::Color color)
+    void Game::Engine::Rendering::ColorRenderer::FillRect(float x, float y, float width, float height,
+                                                          Game::Engine::Common::Matter::Coloring::Color color)
     {
         auto &sdlDevice = Game::Instance().engine_.sdlDevice_;
 
@@ -1043,15 +1016,13 @@ namespace Forradia
 
         auto sdlColor{color.ToSDLColor()};
 
-        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b,
-                               sdlColor.a);
+        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b, sdlColor.a);
 
         SDL_RenderFillRect(sdlDevice.renderer_.get(), &rect);
     }
 
-    void Game::Engine::Rendering::ColorRenderer::DrawRect(
-        float x, float y, float width, float height,
-        Game::Engine::Common::Matter::Coloring::Color color)
+    void Game::Engine::Rendering::ColorRenderer::DrawRect(float x, float y, float width, float height,
+                                                          Game::Engine::Common::Matter::Coloring::Color color)
     {
         auto &sdlDevice = Game::Instance().engine_.sdlDevice_;
 
@@ -1059,14 +1030,13 @@ namespace Forradia
 
         auto sdlColor{color.ToSDLColor()};
 
-        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b,
-                               sdlColor.a);
+        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b, sdlColor.a);
 
         SDL_RenderDrawRect(sdlDevice.renderer_.get(), &rect);
     }
 
-    void Game::Engine::Rendering::ColorRenderer::DrawLine(
-        float x1, float y1, float x2, float y2, Game::Engine::Common::Matter::Coloring::Color color)
+    void Game::Engine::Rendering::ColorRenderer::DrawLine(float x1, float y1, float x2, float y2,
+                                                          Game::Engine::Common::Matter::Coloring::Color color)
     {
         auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
 
@@ -1081,14 +1051,12 @@ namespace Forradia
 
         auto sdlColor{color.ToSDLColor()};
 
-        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b,
-                               sdlColor.a);
+        SDL_SetRenderDrawColor(sdlDevice.renderer_.get(), sdlColor.r, sdlColor.g, sdlColor.b, sdlColor.a);
 
         SDL_RenderDrawLine(sdlDevice.renderer_.get(), destX1, destY1, destX2, destY2);
     }
 
-    SDL_Rect Game::Engine::Rendering::ColorRenderer::CreateSDLRect(float x, float y, float width,
-                                                                   float height)
+    SDL_Rect Game::Engine::Rendering::ColorRenderer::CreateSDLRect(float x, float y, float width, float height)
     {
         auto &GetCanvasSize = Game::Engine::Common::CanvasUtilities::GetCanvasSize;
 
@@ -1121,15 +1089,13 @@ namespace Forradia
         auto fontPath{Replace(absFontPath, "\\", "/")};
         auto fontSizeN{static_cast<int>(fontSize)};
 
-        auto newFont{
-            std::shared_ptr<TTF_Font>(TTF_OpenFont(fontPath.c_str(), fontSizeN), SDLDeleter())};
+        auto newFont{std::shared_ptr<TTF_Font>(TTF_OpenFont(fontPath.c_str(), fontSizeN), SDLDeleter())};
 
         fonts_.insert({fontSize, newFont});
     }
 
-    void Game::Engine::Rendering::TextRenderer::DrawString(std::string_view text, float x, float y,
-                                                           FontSizes fontSize, bool centered,
-                                                           Common::Matter::Coloring::Color color)
+    void Game::Engine::Rendering::TextRenderer::DrawString(std::string_view text, float x, float y, FontSizes fontSize,
+                                                           bool centered, Common::Matter::Coloring::Color color)
     {
         using SDLDeleter = Game::Engine::Common::SDLDeleter;
 
@@ -1146,16 +1112,16 @@ namespace Forradia
 
         auto sdlColor{color.ToSDLColor()};
 
-        auto surface{std::shared_ptr<SDL_Surface>(
-            TTF_RenderText_Solid(font.get(), text.data(), sdlColor), SDLDeleter())};
+        auto surface{
+            std::shared_ptr<SDL_Surface>(TTF_RenderText_Solid(font.get(), text.data(), sdlColor), SDLDeleter())};
 
         auto texture{std::shared_ptr<SDL_Texture>(
             SDL_CreateTextureFromSurface(sldDevice.renderer_.get(), surface.get()), SDLDeleter())};
 
         auto canvasSize{GetCanvasSize()};
 
-        SDL_Rect rect{static_cast<int>(x * canvasSize.width),
-                      static_cast<int>(y * canvasSize.height), surface->w, surface->h};
+        SDL_Rect rect{static_cast<int>(x * canvasSize.width), static_cast<int>(y * canvasSize.height), surface->w,
+                      surface->h};
 
         if (centered)
         {
@@ -1205,14 +1171,12 @@ namespace Forradia
         return x >= 0 && x < size.width && y >= 0 && y < size.height;
     }
 
-    bool
-    Game::Engine::World::WorldArea::IsValidCoordinate(Common::Matter::Geometry::Point coordinate)
+    bool Game::Engine::World::WorldArea::IsValidCoordinate(Common::Matter::Geometry::Point coordinate)
     {
         return IsValidCoordinate(coordinate.x, coordinate.y);
     }
 
-    std::shared_ptr<Game::Engine::World::WorldArea::Tile>
-    Game::Engine::World::WorldArea::GetTile(int x, int y)
+    std::shared_ptr<Game::Engine::World::WorldArea::Tile> Game::Engine::World::WorldArea::GetTile(int x, int y)
     {
         if (IsValidCoordinate(x, y))
         {
@@ -1237,8 +1201,8 @@ namespace Forradia
         objects_.clear();
     }
 
-    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(
-        int objectType, Common::Matter::Geometry::Point position)
+    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(int objectType,
+                                                                      Common::Matter::Geometry::Point position)
     {
         auto &gameProperties = Game::Instance().engine_.configuration_.gameProperties_;
 
@@ -1251,14 +1215,14 @@ namespace Forradia
         objects_.insert({position, std::make_shared<Object>(objectType)});
     }
 
-    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(
-        std::string_view objectName, Common::Matter::Geometry::Point position)
+    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(std::string_view objectName,
+                                                                      Common::Matter::Geometry::Point position)
     {
         AddObject(Game::Engine::Common::Hash(objectName), position);
     }
 
-    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(
-        std::shared_ptr<Object> object, Common::Matter::Geometry::Point position)
+    void Game::Engine::World::WorldArea::Tile::TileObjects::AddObject(std::shared_ptr<Object> object,
+                                                                      Common::Matter::Geometry::Point position)
     {
         objects_.insert({position, object});
     }
@@ -1310,8 +1274,7 @@ namespace Forradia
         // corpesType_ = Hash("Object" + std::string(typeName) + "Corpse");
     }
 
-    void Game::Engine::World::WorldArea::Tile::Creature::Hit(
-        float damage, Common::Matter::Geometry::PointF hitPosition)
+    void Game::Engine::World::WorldArea::Tile::Creature::Hit(float damage, Common::Matter::Geometry::PointF hitPosition)
     {
         auto &Now{Game::Engine::Common::TimeUtilities::Now};
 
@@ -1350,9 +1313,11 @@ namespace Forradia
     {
         SpawnOnSuitableLocation();
 
-        // playerInventory_->AddObject("ObjectRedApple");
+        playerInventory_.Clear();
 
-        // playerInventory_->AddObject("ObjectCopperSword");
+        playerInventory_.AddObject("ObjectRedApple");
+
+        playerInventory_.AddObject("ObjectCopperSword");
     }
 
     void Game::Engine::CoreGameObjects::Player::SpawnOnSuitableLocation()
@@ -1523,6 +1488,68 @@ namespace Forradia
         guiTextConsole->PrintLine("You took " + ssDamage.str() + " damage.");
     }
 
+    void Game::Engine::CoreGameObjects::Player::PlayerInventory::Clear()
+    {
+        objects_.clear();
+    }
+
+    void Game::Engine::CoreGameObjects::Player::PlayerInventory::AddObject(std::string_view objectName)
+    {
+        using Object = World::WorldArea::Tile::TileObjects::Object;
+
+        for (auto i = 0; i < k_maxObjects_; i++)
+        {
+            if (!objects_.contains(i))
+            {
+                objects_[i] = std::make_shared<Object>(objectName);
+
+                return;
+            }
+        }
+    }
+
+    void Game::Engine::CoreGameObjects::Player::PlayerInventory::AddObject(
+        std::shared_ptr<Game::Engine::World::WorldArea::Tile::TileObjects::Object> object, int slotIndex)
+    {
+        objects_.insert({slotIndex, object});
+    }
+
+    std::shared_ptr<Game::Engine::World::WorldArea::Tile::TileObjects::Object>
+    Game::Engine::CoreGameObjects::Player::PlayerInventory::GetObject(int index)
+    {
+        if (objects_.contains(index))
+        {
+            return objects_.at(index);
+        }
+
+        return nullptr;
+    }
+
+    std::shared_ptr<Game::Engine::World::WorldArea::Tile::TileObjects::Object>
+    Game::Engine::CoreGameObjects::Player::PlayerInventory::PickObject(int index)
+    {
+        for (auto it = objects_.begin(); it != objects_.end();)
+        {
+            if (it->first == index)
+            {
+                auto result{it->second};
+
+                objects_.erase(it++);
+
+                return result;
+            }
+
+            ++it;
+        }
+
+        return nullptr;
+    }
+
+    bool Game::Engine::CoreGameObjects::Player::PlayerInventory::HasObject(int index)
+    {
+        return objects_.contains(index);
+    }
+
     void Game::Engine::SceneManager::IntroScene::RenderBeforeGUIDerived()
     {
         auto &Now{Game::Engine::Common::TimeUtilities::Now};
@@ -1537,8 +1564,8 @@ namespace Forradia
 
         if (Now() % 800 < 400)
         {
-            textRenderer.DrawString("Press to start", 0.5f, 0.5f,
-                                    Game::Engine::Rendering::TextRenderer::FontSizes::_24, true);
+            textRenderer.DrawString("Press to start", 0.5f, 0.5f, Game::Engine::Rendering::TextRenderer::FontSizes::_24,
+                                    true);
         }
     }
 
@@ -1558,12 +1585,12 @@ namespace Forradia
 
         gui_->AddComponent(std::make_shared<GUIPanel>(0.4f, 0.4f, 0.2f, 0.2f));
 
-        gui_->AddComponent(std::make_shared<GUIButton>(
-            "Play", 0.45f, 0.44f, 0.1f, 0.04f, [this]()
-            { Game::Instance().engine_.sceneManager_.GoToScene("WorldGenerationScene"); }));
+        gui_->AddComponent(
+            std::make_shared<GUIButton>("Play", 0.45f, 0.44f, 0.1f, 0.04f, [this]()
+                                        { Game::Instance().engine_.sceneManager_.GoToScene("WorldGenerationScene"); }));
 
-        gui_->AddComponent(std::make_shared<GUIButton>("Quit ", 0.45f, 0.52f, 0.1f, 0.04f, [this]()
-                                                       { Game::Instance().engine_.Stop(); }));
+        gui_->AddComponent(std::make_shared<GUIButton>("Quit ", 0.45f, 0.52f, 0.1f, 0.04f,
+                                                       [this]() { Game::Instance().engine_.Stop(); }));
     }
 
     void Game::Engine::SceneManager::MainMenuScene::OnEnterDerived()
@@ -2067,8 +2094,8 @@ namespace Forradia
             "GUIButtonInventoryBackground", "GUIButtonInventoryHoveredBackground"));
 
         gui_->AddComponent(std::make_shared<Game::Engine::SceneManager::IScene::GUIButton>(
-            "", 0.94f, 0.18f, 0.05f, ConvertWidthToHeight(0.05f), [this]() {},
-            "GUIButtonEquipmentBackground", "GUIButtonEquipmentHoveredBackground"));
+            "", 0.94f, 0.18f, 0.05f, ConvertWidthToHeight(0.05f), [this]() {}, "GUIButtonEquipmentBackground",
+            "GUIButtonEquipmentHoveredBackground"));
 
         // gui_->AddComponent(std::make_shared<GUIStatusPanel>());
 
@@ -2079,7 +2106,7 @@ namespace Forradia
     {
         auto guiTextConsole{Game::Engine::SceneManager::IScene::GUITextConsole::InstancePtr()};
 
-        auto& player = Game::Instance().engine_.coreGameObjects_.player_;
+        auto &player = Game::Instance().engine_.coreGameObjects_.player_;
 
         player.Initialize();
 

@@ -6,4 +6,4 @@ cp -r ../resources ../bin/
 
 cd ../bin/
 
-./Darktale
+./Forradia
